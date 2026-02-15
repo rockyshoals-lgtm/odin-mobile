@@ -57,7 +57,7 @@ function SplashScreen() {
       <Text style={splashStyles.logo}>ODIN</Text>
       <Text style={splashStyles.tagline}>FDA Catalyst Intelligence</Text>
       <ActivityIndicator color={COLORS.accentLight} style={{ marginTop: 24 }} />
-      <Text style={splashStyles.version}>v1.0.0 | Engine v10.69</Text>
+      <Text style={splashStyles.version}>v1.1.0 | Engine v10.69</Text>
     </View>
   );
 }

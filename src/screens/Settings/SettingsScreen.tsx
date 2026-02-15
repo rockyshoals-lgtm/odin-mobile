@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { usePredictionStore } from '../../stores/predictionStore';
 import { useWatchlistStore } from '../../stores/watchlistStore';
 
 export function SettingsScreen() {
-  const { odinCoins, getCoinTier, getNextTier } = usePredictionStore();
+  const { odinCoins, getCoinTier, getCoinTierEmoji, getNextTier, currentStreak, longestStreak, getStreakMultiplier } = usePredictionStore();
   const { watchedIds } = useWatchlistStore();
 
   const [notifPDUFA, setNotifPDUFA] = useState(true);
@@ -17,6 +17,7 @@ export function SettingsScreen() {
 
   const nextTier = getNextTier();
   const coinTier = getCoinTier();
+  const streakMult = getStreakMultiplier();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -31,7 +32,7 @@ export function SettingsScreen() {
           <View style={styles.coinCard}>
             <View style={styles.coinRow}>
               <View>
-                <Text style={styles.coinTier}>{coinTier}</Text>
+                <Text style={styles.coinTier}>{getCoinTierEmoji()} {coinTier}</Text>
                 <Text style={styles.coinAmount}>{odinCoins} ODIN Coins</Text>
               </View>
               <View style={styles.coinBadge}>
@@ -47,6 +48,59 @@ export function SettingsScreen() {
               </View>
             )}
             <Text style={styles.watchCount}>{watchedIds.length} catalysts watched</Text>
+          </View>
+        </View>
+
+        {/* Streak Stats */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PREDICTION STREAK</Text>
+          <View style={styles.streakCard}>
+            <View style={styles.streakStatsRow}>
+              <View style={styles.streakStatItem}>
+                <Text style={styles.streakStatEmoji}>{currentStreak >= 7 ? '🔥' : currentStreak >= 3 ? '⚡' : '✨'}</Text>
+                <Text style={styles.streakStatValue}>{currentStreak}</Text>
+                <Text style={styles.streakStatLabel}>Current</Text>
+              </View>
+              <View style={styles.streakDivider} />
+              <View style={styles.streakStatItem}>
+                <Text style={styles.streakStatEmoji}>🏆</Text>
+                <Text style={styles.streakStatValue}>{longestStreak}</Text>
+                <Text style={styles.streakStatLabel}>Best</Text>
+              </View>
+              <View style={styles.streakDivider} />
+              <View style={styles.streakStatItem}>
+                <Text style={styles.streakStatEmoji}>💰</Text>
+                <Text style={[styles.streakStatValue, streakMult > 1 && { color: COLORS.coin }]}>{streakMult}x</Text>
+                <Text style={styles.streakStatLabel}>Multiplier</Text>
+              </View>
+            </View>
+
+            <View style={styles.streakInfo}>
+              <Text style={styles.streakInfoText}>
+                {currentStreak >= 7
+                  ? '🔥 LEGENDARY! 2x coin bonus active!'
+                  : currentStreak >= 3
+                  ? '⚡ Nice! 1.5x coin bonus active. 7-day streak unlocks 2x!'
+                  : 'Predict daily to build your streak and earn bonus coins!'}
+              </Text>
+            </View>
+
+            {/* Streak milestones */}
+            <View style={styles.milestonesRow}>
+              <View style={[styles.milestone, currentStreak >= 1 && styles.milestoneActive]}>
+                <Text style={styles.milestoneNum}>1</Text>
+              </View>
+              <View style={[styles.milestoneBar, currentStreak >= 3 && styles.milestoneBarActive]} />
+              <View style={[styles.milestone, currentStreak >= 3 && styles.milestoneActive]}>
+                <Text style={styles.milestoneNum}>3</Text>
+                <Text style={styles.milestoneLabel}>1.5x</Text>
+              </View>
+              <View style={[styles.milestoneBar, currentStreak >= 7 && styles.milestoneBarActive]} />
+              <View style={[styles.milestone, currentStreak >= 7 && styles.milestoneActive]}>
+                <Text style={styles.milestoneNum}>7</Text>
+                <Text style={styles.milestoneLabel}>2x</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -105,6 +159,18 @@ export function SettingsScreen() {
               thumbColor={notifPrice ? COLORS.accent : COLORS.textMuted}
             />
           </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Streak Reminders</Text>
+              <Text style={styles.settingDesc}>Don't lose your prediction streak!</Text>
+            </View>
+            <Switch
+              value={true}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.coinBg }}
+              thumbColor={COLORS.coin}
+            />
+          </View>
         </View>
 
         {/* About */}
@@ -112,7 +178,7 @@ export function SettingsScreen() {
           <Text style={styles.sectionTitle}>ABOUT</Text>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutLogo}>ODIN</Text>
-            <Text style={styles.aboutVersion}>PDUFA.BIO Mobile v1.0.0</Text>
+            <Text style={styles.aboutVersion}>PDUFA.BIO Mobile v1.1.0</Text>
             <Text style={styles.aboutEngine}>Engine: ODIN v10.69 | 63 Parameters</Text>
             <Text style={styles.aboutAccuracy}>96.0% Verified Accuracy | 50 Events</Text>
 
@@ -133,7 +199,7 @@ export function SettingsScreen() {
               ODIN probability scores are machine-learning model outputs based on historical
               data — they do NOT predict FDA approval or stock performance and should NEVER
               be the sole basis for investment decisions. All investment decisions carry risk,
-              including total loss.
+              including total loss. ODIN Coins are cosmetic reputation tokens with no monetary value.
             </Text>
           </View>
         </View>
@@ -163,6 +229,25 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', backgroundColor: COLORS.coin, borderRadius: 2 },
   progressText: { color: COLORS.textMuted, fontSize: 11 },
   watchCount: { color: COLORS.textMuted, fontSize: 12 },
+
+  // Streak Card
+  streakCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.border },
+  streakStatsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginBottom: 12 },
+  streakStatItem: { alignItems: 'center' },
+  streakStatEmoji: { fontSize: 20, marginBottom: 4 },
+  streakStatValue: { color: COLORS.textPrimary, fontSize: 24, fontWeight: '900' },
+  streakStatLabel: { color: COLORS.textMuted, fontSize: 10, fontWeight: '600' },
+  streakDivider: { width: 1, height: 40, backgroundColor: COLORS.border },
+  streakInfo: { backgroundColor: COLORS.bgInput, borderRadius: 8, padding: 10, marginBottom: 12 },
+  streakInfoText: { color: COLORS.textSecondary, fontSize: 12, textAlign: 'center' },
+
+  milestonesRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  milestone: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.bgInput, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
+  milestoneActive: { backgroundColor: COLORS.accentBg, borderColor: COLORS.accent },
+  milestoneNum: { color: COLORS.textMuted, fontSize: 12, fontWeight: '800' },
+  milestoneLabel: { color: COLORS.coin, fontSize: 8, fontWeight: '700' },
+  milestoneBar: { width: 40, height: 2, backgroundColor: COLORS.border },
+  milestoneBarActive: { backgroundColor: COLORS.accent },
 
   settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   settingInfo: { flex: 1, marginRight: 12 },

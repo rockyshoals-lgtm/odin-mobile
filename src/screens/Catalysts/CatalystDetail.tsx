@@ -14,12 +14,17 @@ interface Props {
 
 export function CatalystDetail({ catalyst, onClose }: Props) {
   const { isWatched, toggle } = useWatchlistStore();
-  const { predictions, sentiment, submitVote, hasPredicted } = usePredictionStore();
+  const { predictions, sentiment, submitVote, hasPredicted, reviewCatalyst } = usePredictionStore();
   const watched = isWatched(catalyst.id);
   const tierConfig = TIER_CONFIG[catalyst.tier as TierKey] || TIER_CONFIG.TIER_4;
   const days = daysUntil(catalyst.date);
   const userVote = predictions[catalyst.id];
   const communityData = sentiment[catalyst.id];
+
+  // Track this as a "reviewed" catalyst for Daily Edge Quest
+  React.useEffect(() => {
+    reviewCatalyst(catalyst.id);
+  }, [catalyst.id]);
 
   const handleVote = (prediction: 'APPROVE' | 'CRL') => {
     if (!hasPredicted(catalyst.id)) {
