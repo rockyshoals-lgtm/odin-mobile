@@ -4,13 +4,19 @@
 
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// Dynamic import — expo-notifications may not be fully functional in Expo Go
+// Detect Expo Go — notifications are NOT supported in Expo Go since SDK 53
+const isExpoGo = Constants.appOwnership === 'expo';
+
+// Only load expo-notifications in dev builds / production (never in Expo Go)
 let Notifications: typeof import('expo-notifications') | null = null;
-try {
-  Notifications = require('expo-notifications');
-} catch {
-  console.warn('[Notifications] expo-notifications not available');
+if (!isExpoGo) {
+  try {
+    Notifications = require('expo-notifications');
+  } catch {
+    // Module not available
+  }
 }
 
 const NOTIF_PREFS_KEY = 'odin-notification-prefs';
