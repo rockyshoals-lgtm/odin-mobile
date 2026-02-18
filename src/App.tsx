@@ -16,7 +16,7 @@ import { notificationService } from './services/notificationService';
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
 
-type OnboardingStep = 'loading' | 'welcome' | 'quiz' | 'quiz-result' | 'tutorial' | 'disclaimer' | 'app';
+type OnboardingStep = 'loading' | 'confidential' | 'welcome' | 'quiz' | 'quiz-result' | 'tutorial' | 'disclaimer' | 'app';
 
 // Dark navigation theme
 const DarkTheme = {
@@ -36,6 +36,52 @@ const DarkTheme = {
     heavy: { fontFamily: 'System', fontWeight: '900' as const },
   },
 };
+
+// Confidential access gate — shown before Welcome/Eye screen every launch
+function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
+  return (
+    <View style={confidentialStyles.container}>
+      <View style={confidentialStyles.iconRow}>
+        <Text style={confidentialStyles.icon}>🔒</Text>
+      </View>
+
+      <Text style={confidentialStyles.classification}>CLASSIFIED</Text>
+      <View style={confidentialStyles.divider} />
+
+      <Text style={confidentialStyles.headline}>
+        DO NOT DISTRIBUTE THIS APK.
+      </Text>
+      <Text style={confidentialStyles.subheadline}>
+        Not to friends. Not to "people in the space."{'\n'}Not to your group chat. Not to anyone.
+      </Text>
+
+      <View style={confidentialStyles.card}>
+        <Text style={confidentialStyles.cardText}>
+          You have been admitted to a circle of exactly ten. Out of eight billion
+          on this planet, I find precisely ten tolerable enough to breathe the same
+          digital air — and you drew one of those slots.{'\n\n'}
+          This is not a public beta. This is not a soft launch. This is a velvet
+          rope with a bouncer who doesn't care about your name.
+        </Text>
+      </View>
+
+      <View style={confidentialStyles.quoteCard}>
+        <Text style={confidentialStyles.quoteText}>
+          "Three may keep a secret, if two of them are dead."
+        </Text>
+        <Text style={confidentialStyles.quoteAttrib}>— Benjamin Franklin</Text>
+      </View>
+
+      <Text style={confidentialStyles.footnote}>
+        Treat the link accordingly.
+      </Text>
+
+      <TouchableOpacity style={confidentialStyles.acceptBtn} onPress={onAcknowledge} activeOpacity={0.8}>
+        <Text style={confidentialStyles.acceptText}>I AM WORTHY — PROCEED</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 // Disclaimer modal shown on first launch
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
@@ -88,14 +134,17 @@ export default function App() {
         .then(() => notificationService.scheduleDailySummary())
         .catch(() => console.warn('[App] Notification init skipped'));
 
-      // Always show welcome screen on every app launch
+      // Always show confidential gate → welcome screen on every app launch
       // (quiz/tutorial progress is still remembered so returning users skip those)
       setTimeout(() => {
-        setStep('welcome');
+        setStep('confidential');
       }, 1500);
     };
     init();
   }, []);
+
+  // ─── Confidential Gate ─────────────
+  const handleConfidentialAcknowledge = () => setStep('welcome');
 
   // ─── Welcome Screen ─────────────────
   const handleWelcomeContinue = async () => {
@@ -135,6 +184,8 @@ export default function App() {
   switch (step) {
     case 'loading':
       return <SplashScreen />;
+    case 'confidential':
+      return <ConfidentialGate onAcknowledge={handleConfidentialAcknowledge} />;
     case 'welcome':
       return <WelcomeScreen onContinue={handleWelcomeContinue} />;
     case 'quiz':
@@ -156,6 +207,113 @@ export default function App() {
       );
   }
 }
+
+const confidentialStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  iconRow: {
+    marginBottom: 12,
+  },
+  icon: {
+    fontSize: 36,
+  },
+  classification: {
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 6,
+    marginBottom: 8,
+  },
+  divider: {
+    width: 60,
+    height: 2,
+    backgroundColor: '#ef4444',
+    opacity: 0.4,
+    marginBottom: 20,
+  },
+  headline: {
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  subheadline: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.15)',
+    marginBottom: 16,
+    width: '100%',
+  },
+  cardText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+  quoteCard: {
+    backgroundColor: 'rgba(234, 179, 8, 0.06)',
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.15)',
+    marginBottom: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  quoteText: {
+    color: '#eab308',
+    fontSize: 13,
+    fontStyle: 'italic',
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  quoteAttrib: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 6,
+    letterSpacing: 0.5,
+  },
+  footnote: {
+    color: COLORS.textDisabled,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 24,
+  },
+  acceptBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    width: '100%',
+  },
+  acceptText: {
+    color: '#ef4444',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+});
 
 const disclaimerStyles = StyleSheet.create({
   overlay: {
