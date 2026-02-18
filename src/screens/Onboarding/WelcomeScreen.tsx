@@ -1,8 +1,9 @@
 // ODIN Mobile — Welcome Screen
-// Large eye icon + Hávamál quote + beta info
+// Large eye icon + Hávamál quote + beta info + haunting viking choral drone
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
+import { Audio } from 'expo-av';
 import { COLORS } from '../../constants/colors';
 
 const { width, height } = Dimensions.get('window');
@@ -16,6 +17,80 @@ export function WelcomeScreen({ onContinue }: Props) {
   const eyeScale = useRef(new Animated.Value(0.8)).current;
   const quoteOpacity = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  // Load and play viking choral music
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        });
+
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../../assets/audio/viking-choral.wav'),
+          {
+            isLooping: true,
+            volume: 0, // Start silent, fade in
+            shouldPlay: true,
+          }
+        );
+
+        if (!mounted) {
+          await sound.unloadAsync();
+          return;
+        }
+
+        soundRef.current = sound;
+
+        // Fade in volume over 2 seconds
+        const fadeSteps = 20;
+        const fadeInterval = 2000 / fadeSteps;
+        for (let i = 1; i <= fadeSteps; i++) {
+          if (!mounted) break;
+          await new Promise(r => setTimeout(r, fadeInterval));
+          await sound.setVolumeAsync(i / fadeSteps * 0.6); // Max 60% volume
+        }
+      } catch (err) {
+        console.warn('[WelcomeScreen] Audio load failed (expected in Expo Go):', err);
+      }
+    };
+
+    loadAudio();
+
+    return () => {
+      mounted = false;
+      if (soundRef.current) {
+        soundRef.current.stopAsync().catch(() => {});
+        soundRef.current.unloadAsync().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Fade out audio and proceed
+  const handleContinue = async () => {
+    if (soundRef.current) {
+      try {
+        // Quick fade out over 800ms
+        const fadeSteps = 10;
+        const fadeInterval = 800 / fadeSteps;
+        const status = await soundRef.current.getStatusAsync();
+        const currentVol = status.isLoaded ? status.volume : 0.6;
+        for (let i = fadeSteps - 1; i >= 0; i--) {
+          await new Promise(r => setTimeout(r, fadeInterval));
+          await soundRef.current!.setVolumeAsync((i / fadeSteps) * currentVol);
+        }
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+      } catch {
+        // Ignore — audio might already be unloaded
+      }
+    }
+    onContinue();
+  };
 
   useEffect(() => {
     // Staggered entrance animation
@@ -83,7 +158,7 @@ export function WelcomeScreen({ onContinue }: Props) {
 
       {/* Enter Button */}
       <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
-        <TouchableOpacity style={styles.enterButton} onPress={onContinue} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.enterButton} onPress={handleContinue} activeOpacity={0.8}>
           <Text style={styles.enterText}>ENTER THE ALL-SIGHT</Text>
         </TouchableOpacity>
       </Animated.View>
