@@ -527,8 +527,8 @@ export function SettingsScreen() {
           <View style={styles.aboutCard}>
             <Text style={styles.aboutLogo}>ODIN</Text>
             <Text style={styles.aboutVersion}>PDUFA.BIO Mobile v1.2.0-beta.1</Text>
-            <Text style={styles.aboutEngine}>Engine: ODIN v10.69 | 63 Parameters</Text>
-            <Text style={styles.aboutAccuracy}>96.0% Verified Accuracy | 50 Events</Text>
+            <Text style={styles.aboutEngine}>Engine: ODIN v10.69 | 2,200+ PDUFAs & 2,000+ Readouts</Text>
+            <Text style={styles.aboutAccuracy}>40B+ Scenarios Simulated (and counting)</Text>
 
             <View style={styles.aboutDivider} />
 

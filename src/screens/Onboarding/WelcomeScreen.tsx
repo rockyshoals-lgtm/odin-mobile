@@ -152,7 +152,7 @@ export function WelcomeScreen({ onContinue }: Props) {
         </View>
         <Text style={styles.betaInfo}>
           Inner circle access only.{'\n'}
-          ODIN Engine v10.69 | 63 Parameters | 96.0% Accuracy
+          ODIN Engine v10.69 | 2,200+ PDUFAs | 2,000+ Readouts | 40B+ Scenarios
         </Text>
       </Animated.View>
 

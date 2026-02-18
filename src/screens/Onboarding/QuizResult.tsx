@@ -44,7 +44,7 @@ const RESULTS: Record<ExperienceLevel, ResultConfig> = {
     emoji: '🔬',
     title: 'MARKET SURGEON',
     subtitle: "Greeks flow through your veins",
-    description: "You're managing delta, selling premium, and reading skew. ODIN gives you the edge — 96% accuracy probability scoring on FDA catalysts, paired with your options expertise.",
+    description: "You're managing delta, selling premium, and reading skew. ODIN gives you the edge — trained on 2,200+ PDUFAs and 40B+ scenarios for FDA catalyst probability scoring, paired with your options expertise.",
     advice: "Go straight to the options chain. Check IV derived from ODIN's probability model and catalyst proximity. The straddle strategies around PDUFA dates are where the alpha is.",
     color: COLORS.coin,
     buttonText: "SHOW ME THE ALPHA",

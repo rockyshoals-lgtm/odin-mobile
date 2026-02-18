@@ -11,8 +11,8 @@ export function CountdownChip({ date }: CountdownChipProps) {
   const days = daysUntil(date);
   const label = fmtDaysUntil(date);
 
-  let bg = COLORS.bgInput;
-  let color = COLORS.textSecondary;
+  let bg: string = COLORS.bgInput;
+  let color: string = COLORS.textSecondary;
 
   if (days <= 0) {
     bg = 'rgba(34, 197, 94, 0.2)';
