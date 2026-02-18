@@ -1,23 +1,27 @@
 // ODIN Mobile — Trading Formatting & Helper Utilities
 
-export function fmtDollar(amount: number): string {
-  if (Math.abs(amount) >= 1e6) return `$${(amount / 1e6).toFixed(2)}M`;
-  if (Math.abs(amount) >= 1e3) return `$${(amount / 1e3).toFixed(1)}K`;
-  return `$${amount.toFixed(2)}`;
+export function fmtDollar(amount: number | undefined | null): string {
+  const val = amount ?? 0;
+  if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+  if (Math.abs(val) >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
+  return `$${val.toFixed(2)}`;
 }
 
-export function fmtPnL(amount: number): string {
-  const sign = amount >= 0 ? '+' : '';
-  return `${sign}${fmtDollar(amount)}`;
+export function fmtPnL(amount: number | undefined | null): string {
+  const val = amount ?? 0;
+  const sign = val >= 0 ? '+' : '';
+  return `${sign}${fmtDollar(val)}`;
 }
 
-export function fmtPnLPct(pct: number): string {
-  const sign = pct >= 0 ? '+' : '';
-  return `${sign}${pct.toFixed(2)}%`;
+export function fmtPnLPct(pct: number | undefined | null): string {
+  const val = pct ?? 0;
+  const sign = val >= 0 ? '+' : '';
+  return `${sign}${val.toFixed(2)}%`;
 }
 
-export function fmtPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+export function fmtPrice(price: number | undefined | null): string {
+  const val = price ?? 0;
+  return `$${val.toFixed(2)}`;
 }
 
 export function fmtGreek(value: number, type: 'delta' | 'gamma' | 'theta' | 'vega'): string {

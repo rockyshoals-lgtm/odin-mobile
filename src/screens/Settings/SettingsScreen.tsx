@@ -119,8 +119,8 @@ export function SettingsScreen() {
                 <Text style={styles.tradeRecordLabel}>Portfolio Value</Text>
               </View>
               <View style={styles.tradeRecordStat}>
-                <Text style={[styles.tradeRecordValue, { color: metrics.totalPnL >= 0 ? COLORS.approve : COLORS.crl }]}>
-                  {fmtDollar(metrics.totalPnL)}
+                <Text style={[styles.tradeRecordValue, { color: (metrics.totalGain ?? 0) >= 0 ? COLORS.approve : COLORS.crl }]}>
+                  {fmtDollar(metrics.totalGain)}
                 </Text>
                 <Text style={styles.tradeRecordLabel}>Total P&L</Text>
               </View>
