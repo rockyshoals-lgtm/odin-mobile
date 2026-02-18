@@ -64,7 +64,7 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
           {/* Date + Countdown */}
           <View style={styles.dateBox}>
             <View>
-              <Text style={styles.dateLabel}>{catalyst.type === 'Earnings' ? 'EARNINGS DATE' : catalyst.type === 'READOUT' ? 'READOUT DATE' : 'PDUFA DATE'}</Text>
+              <Text style={styles.dateLabel}>{catalyst.type === 'Earnings' ? 'EARNINGS DATE' : catalyst.type === 'READOUT' ? 'READOUT DATE' : 'PDUFA DATE'}{catalyst.type !== 'PDUFA' ? ' (Expected)' : ''}</Text>
               <Text style={styles.dateValue}>{fmtDateFull(catalyst.date)}</Text>
             </View>
             <View style={[styles.countdownBox, { borderColor: days <= 7 ? COLORS.crl : days <= 14 ? COLORS.delayed : COLORS.border }]}>

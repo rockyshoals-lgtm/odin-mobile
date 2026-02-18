@@ -17,19 +17,21 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
   const { isWatched, toggle } = useWatchlistStore();
   const watched = isWatched(catalyst.id);
   const tierConfig = TIER_CONFIG[catalyst.tier as TierKey] || TIER_CONFIG.TIER_4;
+  const isPdufa = catalyst.type === 'PDUFA';
+  const borderColor = isPdufa ? tierConfig.color : catalyst.type === 'Earnings' ? '#06b6d4' : '#a855f7';
 
   const designationBadges = catalyst.designations?.slice(0, 3) || [];
 
   return (
     <TouchableOpacity
-      style={[styles.card, { borderLeftColor: tierConfig.color }]}
+      style={[styles.card, { borderLeftColor: borderColor }]}
       onPress={() => onPress(catalyst)}
       activeOpacity={0.7}
     >
       {/* Top row: Date + Countdown + Watch */}
       <View style={styles.topRow}>
         <View style={styles.dateRow}>
-          <Text style={styles.dateText}>{fmtDateShort(catalyst.date)}</Text>
+          <Text style={styles.dateText}>{fmtDateShort(catalyst.date)}{!isPdufa && ' (Est.)'}</Text>
           <CountdownChip date={catalyst.date} />
           <View style={[styles.typeBadge, { backgroundColor: catalyst.type === 'Earnings' ? COLORS.earningsBg : catalyst.type === 'READOUT' ? COLORS.readoutBg : COLORS.pdufaBg }]}>
             <Text style={[styles.typeText, { color: catalyst.type === 'Earnings' ? COLORS.earnings : catalyst.type === 'READOUT' ? COLORS.readout : COLORS.pdufa }]}>
