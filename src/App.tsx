@@ -6,10 +6,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from './constants/colors';
 import { BottomTabNavigator } from './components/Navigation/BottomTabNavigator';
 import { WelcomeScreen } from './screens/Onboarding/WelcomeScreen';
+import { OptionsQuiz, ExperienceLevel } from './screens/Onboarding/OptionsQuiz';
+import { QuizResult } from './screens/Onboarding/QuizResult';
+import { OptionsTutorial } from './screens/Onboarding/OptionsTutorial';
 import { useCatalystStore } from './stores/catalystStore';
 import { CATALYSTS_DATA } from './constants/catalysts';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
+const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
+
+type OnboardingStep = 'loading' | 'welcome' | 'quiz' | 'quiz-result' | 'tutorial' | 'disclaimer' | 'app';
 
 // Dark navigation theme
 const DarkTheme = {
@@ -67,42 +73,87 @@ function SplashScreen() {
 }
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [welcomeSeen, setWelcomeSeen] = useState<boolean | null>(null);
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [step, setStep] = useState<OnboardingStep>('loading');
+  const [quizLevel, setQuizLevel] = useState<ExperienceLevel>('BEGINNER');
   const { setCatalysts } = useCatalystStore();
 
   useEffect(() => {
-    // Check if welcome screen was already seen
-    AsyncStorage.getItem(WELCOME_SEEN_KEY).then((val) => {
-      setWelcomeSeen(val === 'true');
-    });
+    const init = async () => {
+      // Load catalyst data
+      setCatalysts(CATALYSTS_DATA);
 
-    // Load catalyst data
-    setCatalysts(CATALYSTS_DATA);
+      // Check onboarding progress
+      const [welcomeVal, quizVal] = await Promise.all([
+        AsyncStorage.getItem(WELCOME_SEEN_KEY),
+        AsyncStorage.getItem(QUIZ_DONE_KEY),
+      ]);
 
-    // Simulate initial load
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
+      // Determine starting step
+      setTimeout(() => {
+        if (welcomeVal !== 'true') {
+          setStep('welcome');
+        } else if (quizVal !== 'true') {
+          setStep('quiz');
+        } else {
+          setStep('disclaimer');
+        }
+      }, 1500);
+    };
+    init();
   }, []);
 
+  // ─── Welcome Screen ─────────────────
   const handleWelcomeContinue = async () => {
     await AsyncStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setWelcomeSeen(true);
+    setStep('quiz');
   };
 
-  if (loading || welcomeSeen === null) return <SplashScreen />;
-  if (!welcomeSeen) return <WelcomeScreen onContinue={handleWelcomeContinue} />;
-  if (!disclaimerAccepted) return <DisclaimerModal onAccept={() => setDisclaimerAccepted(true)} />;
+  // ─── Quiz Complete ──────────────────
+  const handleQuizComplete = (level: ExperienceLevel) => {
+    setQuizLevel(level);
+    setStep('quiz-result');
+  };
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
-      <NavigationContainer theme={DarkTheme}>
-        <BottomTabNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
-  );
+  // ─── Quiz Result Actions ────────────
+  const handleStartTutorial = () => setStep('tutorial');
+  const handleSkipToApp = async () => {
+    await AsyncStorage.setItem(QUIZ_DONE_KEY, 'true');
+    setStep('disclaimer');
+  };
+
+  // ─── Tutorial Complete ──────────────
+  const handleTutorialComplete = async () => {
+    await AsyncStorage.setItem(QUIZ_DONE_KEY, 'true');
+    setStep('disclaimer');
+  };
+
+  // ─── Disclaimer Accepted ────────────
+  const handleDisclaimerAccept = () => setStep('app');
+
+  // ─── Render ─────────────────────────
+  switch (step) {
+    case 'loading':
+      return <SplashScreen />;
+    case 'welcome':
+      return <WelcomeScreen onContinue={handleWelcomeContinue} />;
+    case 'quiz':
+      return <OptionsQuiz onComplete={handleQuizComplete} />;
+    case 'quiz-result':
+      return <QuizResult level={quizLevel} onStartTutorial={handleStartTutorial} onSkipToApp={handleSkipToApp} />;
+    case 'tutorial':
+      return <OptionsTutorial onComplete={handleTutorialComplete} />;
+    case 'disclaimer':
+      return <DisclaimerModal onAccept={handleDisclaimerAccept} />;
+    case 'app':
+      return (
+        <SafeAreaProvider>
+          <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+          <NavigationContainer theme={DarkTheme}>
+            <BottomTabNavigator />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      );
+  }
 }
 
 const disclaimerStyles = StyleSheet.create({
