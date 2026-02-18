@@ -1,30 +1,32 @@
-// ODIN Mobile — Market Data Service (FMP + FinnBrain)
+// ODIN Mobile — Market Data Service (FMP Stable API + FinnBrain)
 // Handles live quotes, company profiles, historical prices, and sentiment
 
 import axios from 'axios';
 import API_CONFIG from '../config/apiKeys';
 import { LiveQuote, CompanyProfile } from '../constants/tradingTypes';
 
+const FMP_STABLE = 'https://financialmodelingprep.com/stable';
+
 class MarketDataService {
   // ─── FMP: Real-Time Quote ──────────────────────────────────
 
   async getQuote(ticker: string): Promise<LiveQuote | null> {
     try {
-      const url = `${API_CONFIG.FMP_BASE_URL}/quote/${ticker}?apikey=${API_CONFIG.FMP_API_KEY}`;
+      const url = `${FMP_STABLE}/quote?symbol=${ticker}&apikey=${API_CONFIG.FMP_API_KEY}`;
       const { data } = await axios.get(url, { timeout: 10000 });
-      if (!data || data.length === 0) return null;
+      if (!data || !Array.isArray(data) || data.length === 0) return null;
       const q = data[0];
       return {
-        ticker: q.symbol,
-        price: q.price,
-        previousClose: q.previousClose,
-        change: q.change,
-        changePct: q.changesPercentage,
-        marketCap: q.marketCap,
-        volume: q.volume,
-        high: q.dayHigh,
-        low: q.dayLow,
-        open: q.open,
+        ticker: q.symbol || ticker,
+        price: q.price ?? 0,
+        previousClose: q.previousClose ?? 0,
+        change: q.change ?? 0,
+        changePct: q.changePercentage ?? 0,
+        marketCap: q.marketCap ?? 0,
+        volume: q.volume ?? 0,
+        high: q.dayHigh ?? 0,
+        low: q.dayLow ?? 0,
+        open: q.open ?? 0,
         lastFetch: Date.now(),
       };
     } catch (err) {
@@ -33,34 +35,21 @@ class MarketDataService {
     }
   }
 
-  // ─── FMP: Batch Quotes ─────────────────────────────────────
+  // ─── FMP: Batch Quotes (sequential, since batch endpoint requires higher tier) ──
 
   async getQuotes(tickers: string[]): Promise<Record<string, LiveQuote>> {
     const results: Record<string, LiveQuote> = {};
-    try {
-      // FMP supports comma-separated tickers
-      const batch = tickers.join(',');
-      const url = `${API_CONFIG.FMP_BASE_URL}/quote/${batch}?apikey=${API_CONFIG.FMP_API_KEY}`;
-      const { data } = await axios.get(url, { timeout: 15000 });
-      if (Array.isArray(data)) {
-        data.forEach((q: any) => {
-          results[q.symbol] = {
-            ticker: q.symbol,
-            price: q.price,
-            previousClose: q.previousClose,
-            change: q.change,
-            changePct: q.changesPercentage,
-            marketCap: q.marketCap,
-            volume: q.volume,
-            high: q.dayHigh,
-            low: q.dayLow,
-            open: q.open,
-            lastFetch: Date.now(),
-          };
-        });
-      }
-    } catch (err) {
-      console.warn('[MarketData] Batch quote fetch failed:', err);
+    // Fetch in parallel, max 5 at a time to avoid rate limits
+    const chunks: string[][] = [];
+    for (let i = 0; i < tickers.length; i += 5) {
+      chunks.push(tickers.slice(i, i + 5));
+    }
+    for (const chunk of chunks) {
+      const promises = chunk.map(async (ticker) => {
+        const quote = await this.getQuote(ticker);
+        if (quote) results[ticker] = quote;
+      });
+      await Promise.all(promises);
     }
     return results;
   }
@@ -69,17 +58,17 @@ class MarketDataService {
 
   async getCompanyProfile(ticker: string): Promise<CompanyProfile | null> {
     try {
-      const url = `${API_CONFIG.FMP_BASE_URL}/profile/${ticker}?apikey=${API_CONFIG.FMP_API_KEY}`;
+      const url = `${FMP_STABLE}/profile?symbol=${ticker}&apikey=${API_CONFIG.FMP_API_KEY}`;
       const { data } = await axios.get(url, { timeout: 10000 });
-      if (!data || data.length === 0) return null;
+      if (!data || !Array.isArray(data) || data.length === 0) return null;
       const p = data[0];
       return {
-        ticker: p.symbol,
-        name: p.companyName,
-        sector: p.sector,
-        industry: p.industry,
-        marketCap: p.mktCap,
-        exchange: p.exchangeShortName,
+        ticker: p.symbol || ticker,
+        name: p.companyName || '',
+        sector: p.sector || '',
+        industry: p.industry || '',
+        marketCap: p.marketCap ?? 0,
+        exchange: p.exchange || '',
         lastUpdated: new Date().toISOString(),
       };
     } catch (err) {
@@ -92,28 +81,23 @@ class MarketDataService {
 
   async getHistoricalPrices(ticker: string, days: number = 60): Promise<number[]> {
     try {
-      const url = `${API_CONFIG.FMP_BASE_URL}/historical-price-full/${ticker}?timeseries=${days}&apikey=${API_CONFIG.FMP_API_KEY}`;
+      const to = new Date().toISOString().split('T')[0];
+      const from = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+      const url = `${FMP_STABLE}/historical-price-eod/full?symbol=${ticker}&from=${from}&to=${to}&apikey=${API_CONFIG.FMP_API_KEY}`;
       const { data } = await axios.get(url, { timeout: 15000 });
-      if (!data?.historical) return [];
-      return data.historical.map((h: any) => h.close).reverse();
+      if (!Array.isArray(data) || data.length === 0) return [];
+      return data.map((h: any) => h.close).filter((c: any) => c != null).reverse();
     } catch (err) {
       console.warn(`[MarketData] Failed to fetch history for ${ticker}:`, err);
       return [];
     }
   }
 
-  // ─── FMP: Market Cap (quick) ───────────────────────────────
+  // ─── FMP: Market Cap (via quote) ───────────────────────────
 
   async getMarketCap(ticker: string): Promise<number | null> {
-    try {
-      const url = `${API_CONFIG.FMP_BASE_URL}/market-capitalization/${ticker}?apikey=${API_CONFIG.FMP_API_KEY}`;
-      const { data } = await axios.get(url, { timeout: 10000 });
-      if (!data || data.length === 0) return null;
-      return data[0].marketCap;
-    } catch (err) {
-      console.warn(`[MarketData] Failed to fetch market cap for ${ticker}:`, err);
-      return null;
-    }
+    const quote = await this.getQuote(ticker);
+    return quote?.marketCap ?? null;
   }
 
   // ─── FinnBrain: Sentiment ──────────────────────────────────

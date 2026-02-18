@@ -46,11 +46,13 @@ export function fmtContracts(qty: number): string {
   return `${qty} contract${qty !== 1 ? 's' : ''} (${qty * 100} shares)`;
 }
 
-export function fmtMarketCap(cap: number): string {
-  if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
-  if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
-  if (cap >= 1e6) return `$${(cap / 1e6).toFixed(0)}M`;
-  return `$${cap.toLocaleString()}`;
+export function fmtMarketCap(cap: number | undefined | null): string {
+  const val = cap ?? 0;
+  if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
+  if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+  if (val >= 1e6) return `$${(val / 1e6).toFixed(0)}M`;
+  if (val === 0) return '—';
+  return `$${val.toLocaleString()}`;
 }
 
 export function pnlColor(value: number): string {

@@ -7,7 +7,7 @@ const API_CONFIG = {
   POLYGON_API_KEY: 'mJv1CAmZy15o5bkz_tFqcVoUh3KGjppp',
 
   // Base URLs
-  FMP_BASE_URL: 'https://financialmodelingprep.com/api/v3',
+  FMP_BASE_URL: 'https://financialmodelingprep.com/stable',  // FMP stable API (v3 is legacy)
   FINNBRAIN_BASE_URL: 'https://api.finnbrain.io/v1',
 
   // Cache TTLs (ms)

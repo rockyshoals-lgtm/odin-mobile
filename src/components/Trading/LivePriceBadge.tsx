@@ -25,17 +25,25 @@ export function LivePriceBadge({ ticker, compact = false }: Props) {
   if (!quote) {
     return compact ? null : (
       <View style={styles.loading}>
-        <Text style={styles.loadingText}>...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
+  const price = quote.price ?? 0;
+  const changePct = quote.changePct ?? 0;
+  const change = quote.change ?? 0;
+  const marketCap = quote.marketCap ?? 0;
+  const high = quote.high ?? 0;
+  const low = quote.low ?? 0;
+  const volume = quote.volume ?? 0;
+
   if (compact) {
     return (
       <View style={styles.compactContainer}>
-        <Text style={styles.compactPrice}>{fmtPrice(quote.price)}</Text>
-        <Text style={[styles.compactChange, { color: pnlColor(quote.changePct) }]}>
-          {quote.changePct >= 0 ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(1)}%
+        <Text style={styles.compactPrice}>{fmtPrice(price)}</Text>
+        <Text style={[styles.compactChange, { color: pnlColor(changePct) }]}>
+          {changePct >= 0 ? '▲' : '▼'} {Math.abs(changePct).toFixed(1)}%
         </Text>
       </View>
     );
@@ -46,19 +54,19 @@ export function LivePriceBadge({ ticker, compact = false }: Props) {
       <View style={styles.row}>
         <View>
           <Text style={styles.label}>LIVE PRICE</Text>
-          <Text style={styles.price}>{fmtPrice(quote.price)}</Text>
+          <Text style={styles.price}>{fmtPrice(price)}</Text>
         </View>
         <View style={styles.right}>
-          <Text style={[styles.change, { color: pnlColor(quote.changePct) }]}>
-            {quote.changePct >= 0 ? '+' : ''}{quote.changePct.toFixed(2)}%
+          <Text style={[styles.change, { color: pnlColor(changePct) }]}>
+            {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
           </Text>
-          <Text style={styles.marketCap}>Mkt Cap: {fmtMarketCap(quote.marketCap)}</Text>
+          <Text style={styles.marketCap}>Mkt Cap: {fmtMarketCap(marketCap)}</Text>
         </View>
       </View>
       <View style={styles.detailRow}>
-        <Text style={styles.detail}>H: {fmtPrice(quote.high)}</Text>
-        <Text style={styles.detail}>L: {fmtPrice(quote.low)}</Text>
-        <Text style={styles.detail}>Vol: {(quote.volume / 1e6).toFixed(1)}M</Text>
+        <Text style={styles.detail}>H: {fmtPrice(high)}</Text>
+        <Text style={styles.detail}>L: {fmtPrice(low)}</Text>
+        <Text style={styles.detail}>Vol: {volume > 0 ? (volume / 1e6).toFixed(1) + 'M' : '—'}</Text>
       </View>
     </View>
   );
