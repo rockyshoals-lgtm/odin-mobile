@@ -58,13 +58,13 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
               <Text style={styles.drug}>{catalyst.drug}</Text>
               <Text style={styles.indication}>{catalyst.indication}</Text>
             </View>
-            <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />
+            {catalyst.type === 'PDUFA' && catalyst.prob > 0 && <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />}
           </View>
 
           {/* Date + Countdown */}
           <View style={styles.dateBox}>
             <View>
-              <Text style={styles.dateLabel}>PDUFA DATE</Text>
+              <Text style={styles.dateLabel}>{catalyst.type === 'Earnings' ? 'EARNINGS DATE' : catalyst.type === 'READOUT' ? 'READOUT DATE' : 'PDUFA DATE'}</Text>
               <Text style={styles.dateValue}>{fmtDateFull(catalyst.date)}</Text>
             </View>
             <View style={[styles.countdownBox, { borderColor: days <= 7 ? COLORS.crl : days <= 14 ? COLORS.delayed : COLORS.border }]}>
@@ -75,20 +75,21 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
             </View>
           </View>
 
-          {/* ODIN Score */}
+          {/* ODIN Score — only for PDUFAs */}
+          {catalyst.type === 'PDUFA' && catalyst.prob > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ODIN PROBABILITY</Text>
+            <Text style={styles.sectionTitle}>ODIN APPROVAL PROBABILITY</Text>
             <View style={styles.probDisplay}>
               <Text style={[styles.probBig, { color: tierConfig.color }]}>{fmtProb(catalyst.prob)}</Text>
               <View style={[styles.tierTag, { backgroundColor: tierConfig.bg, borderColor: tierConfig.color }]}>
                 <Text style={[styles.tierTagText, { color: tierConfig.color }]}>{tierConfig.fullLabel}</Text>
               </View>
             </View>
-            {/* Prob bar */}
             <View style={styles.probBarBg}>
               <View style={[styles.probBarFill, { width: `${catalyst.prob * 100}%`, backgroundColor: tierConfig.color }]} />
             </View>
           </View>
+          )}
 
           {/* Live Price */}
           <View style={styles.section}>

@@ -90,17 +90,25 @@ export function PredictScreen() {
         <Text style={styles.indication}>{catalyst.indication}</Text>
         <Text style={styles.ta}>{catalyst.ta}</Text>
 
-        {/* Big ODIN Score */}
+        {/* Big ODIN Score — only for PDUFAs */}
+        {catalyst.type === 'PDUFA' && catalyst.prob > 0 ? (
         <View style={styles.scoreSection}>
           <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />
           <View style={styles.scoreRight}>
             <Text style={[styles.bigProb, { color: tierConfig.color }]}>{fmtProb(catalyst.prob)}</Text>
-            <Text style={styles.probLabel}>ODIN PROBABILITY</Text>
+            <Text style={styles.probLabel}>ODIN APPROVAL PROBABILITY</Text>
             {streakMult > 1 && (
               <Text style={styles.multiplierHint}>🔥 {streakMult}x coin bonus active</Text>
             )}
           </View>
         </View>
+        ) : (
+        <View style={styles.scoreSection}>
+          <View style={styles.scoreRight}>
+            <Text style={[styles.probLabel]}>{catalyst.type === 'Earnings' ? 'EARNINGS EVENT' : `${catalyst.phase || ''} READOUT`.trim()}</Text>
+          </View>
+        </View>
+        )}
 
         {/* Community Sentiment */}
         {communityData && (
