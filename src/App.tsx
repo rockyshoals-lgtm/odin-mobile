@@ -83,9 +83,10 @@ export default function App() {
       // Load catalyst data
       setCatalysts(CATALYSTS_DATA);
 
-      // Initialize push notifications
-      await notificationService.initialize();
-      await notificationService.scheduleDailySummary();
+      // Initialize push notifications (non-blocking — degrades in Expo Go)
+      notificationService.initialize()
+        .then(() => notificationService.scheduleDailySummary())
+        .catch(() => console.warn('[App] Notification init skipped'));
 
       // Check onboarding progress
       const [welcomeVal, quizVal] = await Promise.all([
