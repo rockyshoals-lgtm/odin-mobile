@@ -8,7 +8,7 @@ import { usePaperTradeStore } from '../../stores/paperTradeStore';
 import { fmtDollar, fmtPnLPct } from '../../utils/tradingUtils';
 import { notificationService, PortfolioNotifPrefs, DEFAULT_NOTIF_PREFS } from '../../services/notificationService';
 
-const BETA_APK_URL = 'https://github.com/rockyshoals-lgtm/odin-mobile/releases/latest';
+const BETA_APK_URL = 'https://expo.dev/accounts/huginn/projects/odin-mobile/builds';
 const BETA_MESSAGE = `Check out ODIN — FDA Catalyst Intelligence app. We're beta testing it right now.\n\nPaper trade biotech catalysts with $100K, see ODIN approval probabilities, and experiment with options.\n\nDownload the APK: ${BETA_APK_URL}\n\n— ODIN Inner Circle`;
 
 export function SettingsScreen() {
