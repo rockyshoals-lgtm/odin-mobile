@@ -233,6 +233,14 @@ export function TradeEntryScreen({ ticker: initialTicker, catalystId, onClose }:
             </Text>
           </TouchableOpacity>
 
+          {/* Odin Capital Announcement */}
+          <View style={styles.liveTradeAnnouncement}>
+            <Text style={styles.liveTradeTitle}>⚡ LIVE TRADING — MARCH 5</Text>
+            <Text style={styles.liveTradeDesc}>
+              Real money trading through Odin Capital is launching soon. Paper trade now to sharpen your edge.
+            </Text>
+          </View>
+
           <View style={{ height: 40 }} />
         </ScrollView>
       </View>
@@ -356,4 +364,16 @@ const styles = StyleSheet.create({
   executeSell: { backgroundColor: 'rgba(239,68,68,0.2)', borderWidth: 1.5, borderColor: COLORS.crl },
   executeDisabled: { opacity: 0.4 },
   executeBtnText: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
+
+  liveTradeAnnouncement: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(234, 179, 8, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.25)',
+    alignItems: 'center',
+  },
+  liveTradeTitle: { color: '#eab308', fontSize: 11, fontWeight: '900', letterSpacing: 1.5, marginBottom: 4 },
+  liveTradeDesc: { color: COLORS.textMuted, fontSize: 11, textAlign: 'center', lineHeight: 16 },
 });

@@ -47,6 +47,15 @@ export function TradeScreen() {
         </View>
       </View>
 
+      {/* Live Trading Announcement */}
+      <View style={styles.announcementBanner}>
+        <Text style={styles.announcementEmoji}>🔥</Text>
+        <View style={styles.announcementTextWrap}>
+          <Text style={styles.announcementTitle}>LIVE TRADING COMING MARCH 5</Text>
+          <Text style={styles.announcementDesc}>Real money. Real markets. Powered by Odin Capital.</Text>
+        </View>
+      </View>
+
       {/* Sub Tabs */}
       <View style={styles.subTabs}>
         {(['PORTFOLIO', 'OPTIONS'] as const).map(t => (
@@ -118,4 +127,30 @@ const styles = StyleSheet.create({
     borderColor: COLORS.approve,
   },
   newTradeBtnText: { color: COLORS.approve, fontSize: 12, fontWeight: '800' },
+
+  // Live Trading Announcement
+  announcementBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(234, 179, 8, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.3)',
+  },
+  announcementEmoji: { fontSize: 22, marginRight: 10 },
+  announcementTextWrap: { flex: 1 },
+  announcementTitle: {
+    color: '#eab308',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+  announcementDesc: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    marginTop: 2,
+  },
 });

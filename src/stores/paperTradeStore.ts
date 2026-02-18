@@ -157,7 +157,7 @@ export const usePaperTradeStore = create<PaperTradeState>()(
             totalCost: remainingQty * pos.averageEntryPrice,
             currentValue: remainingQty * price,
             unrealizedPnL: remainingQty * (price - pos.averageEntryPrice),
-            unrealizedPnLPct: ((price - pos.averageEntryPrice) / pos.averageEntryPrice) * 100,
+            unrealizedPnLPct: pos.averageEntryPrice > 0 ? ((price - pos.averageEntryPrice) / pos.averageEntryPrice) * 100 : 0,
             lastUpdated: new Date().toISOString(),
           };
         }
