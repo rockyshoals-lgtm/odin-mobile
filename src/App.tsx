@@ -92,24 +92,23 @@ function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
   );
 }
 
-// Disclaimer modal shown on first launch
+// Disclaimer modal — shown every launch (attorneys require it)
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   return (
     <View style={disclaimerStyles.overlay}>
       <View style={disclaimerStyles.modal}>
-        <Text style={disclaimerStyles.warningIcon}>⚠️</Text>
-        <Text style={disclaimerStyles.title}>IMPORTANT DISCLAIMER</Text>
+        <Text style={disclaimerStyles.warningIcon}>⚖️</Text>
+        <Text style={disclaimerStyles.title}>MY LAWYERS MADE ME SAY THIS</Text>
+        <Text style={disclaimerStyles.intro}>
+          Look — I scored the best domain name in the universe for a biotech catalyst engine. Naturally, my attorneys said "congratulations, now put up a disclaimer." So here we are.
+        </Text>
         <Text style={disclaimerStyles.text}>
-          PDUFA.BIO is not affiliated with the FDA. This app is not financial advice.{'\n\n'}
-          ODIN probability scores are machine-learning model outputs based on historical
-          data — they do NOT predict FDA approval or stock performance and should NEVER
-          be the sole basis for investment decisions.{'\n\n'}
-          All investment decisions carry risk, including total loss. By using this app,
-          you accept full responsibility for your decisions. PDUFA.BIO assumes NO liability
-          for losses or damages.
+          PDUFA.BIO is not affiliated with the FDA or any government agency. "PDUFA" refers to the Prescription Drug User Fee Act — we just built a really cool engine around it.{'\n\n'}
+          This is not financial advice. We are not registered investment advisors (not until mid-March anyway), broker-dealers (but oh my God, we're about to be — stay tuned), or financial planners.{'\n\n'}
+          ODIN scores are ML model outputs, not crystal balls. They do not predict the future and should never be the sole basis for any investment decision. All investing carries risk, including total loss.
         </Text>
         <TouchableOpacity style={disclaimerStyles.acceptBtn} onPress={onAccept}>
-          <Text style={disclaimerStyles.acceptText}>I UNDERSTAND AND ACCEPT</Text>
+          <Text style={disclaimerStyles.acceptText}>I GET IT — LET ME IN</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -348,7 +347,7 @@ const disclaimerStyles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: COLORS.crl + '40',
+    borderColor: COLORS.accent + '40',
     maxWidth: 400,
     width: '100%',
   },
@@ -358,12 +357,20 @@ const disclaimerStyles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    color: COLORS.crl,
+    color: COLORS.accentLight,
     fontSize: 18,
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 1,
+    marginBottom: 12,
+  },
+  intro: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    fontStyle: 'italic',
     marginBottom: 16,
+    textAlign: 'center',
   },
   text: {
     color: COLORS.textSecondary,
