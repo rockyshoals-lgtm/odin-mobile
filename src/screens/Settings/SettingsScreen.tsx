@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { usePredictionStore } from '../../stores/predictionStore';
 import { useWatchlistStore } from '../../stores/watchlistStore';
+import { usePaperTradeStore } from '../../stores/paperTradeStore';
+import { fmtDollar, fmtPnLPct } from '../../utils/tradingUtils';
 
 export function SettingsScreen() {
   const { odinCoins, getCoinTier, getCoinTierEmoji, getNextTier, currentStreak, longestStreak, getStreakMultiplier } = usePredictionStore();
   const { watchedIds } = useWatchlistStore();
+
+  const { account, tradeHistory, getPortfolioMetrics, resetAccount } = usePaperTradeStore();
+  const metrics = getPortfolioMetrics();
 
   const [notifPDUFA, setNotifPDUFA] = useState(true);
   const [notif7Day, setNotif7Day] = useState(true);
@@ -101,6 +106,52 @@ export function SettingsScreen() {
                 <Text style={styles.milestoneLabel}>2x</Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* Paper Trading Track Record */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PAPER TRADING TRACK RECORD</Text>
+          <View style={styles.tradeRecordCard}>
+            <View style={styles.tradeRecordRow}>
+              <View style={styles.tradeRecordStat}>
+                <Text style={styles.tradeRecordValue}>{fmtDollar(metrics.totalValue)}</Text>
+                <Text style={styles.tradeRecordLabel}>Portfolio Value</Text>
+              </View>
+              <View style={styles.tradeRecordStat}>
+                <Text style={[styles.tradeRecordValue, { color: metrics.totalPnL >= 0 ? COLORS.approve : COLORS.crl }]}>
+                  {fmtDollar(metrics.totalPnL)}
+                </Text>
+                <Text style={styles.tradeRecordLabel}>Total P&L</Text>
+              </View>
+            </View>
+            <View style={styles.tradeRecordRow}>
+              <View style={styles.tradeRecordStat}>
+                <Text style={styles.tradeRecordValue}>{metrics.totalTrades}</Text>
+                <Text style={styles.tradeRecordLabel}>Total Trades</Text>
+              </View>
+              <View style={styles.tradeRecordStat}>
+                <Text style={styles.tradeRecordValue}>{fmtPnLPct(metrics.winRate * 100)}</Text>
+                <Text style={styles.tradeRecordLabel}>Win Rate</Text>
+              </View>
+              <View style={styles.tradeRecordStat}>
+                <Text style={[styles.tradeRecordValue, { color: COLORS.approve }]}>{fmtDollar(metrics.largestWin)}</Text>
+                <Text style={styles.tradeRecordLabel}>Best Trade</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.resetButton}
+              onPress={() => Alert.alert(
+                'Reset Paper Account',
+                'This will reset your $100,000 paper trading account and clear all positions and history.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Reset', style: 'destructive', onPress: resetAccount },
+                ]
+              )}
+            >
+              <Text style={styles.resetButtonText}>Reset Paper Account ($100K)</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -262,6 +313,15 @@ const styles = StyleSheet.create({
   aboutDivider: { width: '100%', height: 1, backgroundColor: COLORS.border, marginVertical: 14 },
   aboutLink: { paddingVertical: 8 },
   aboutLinkText: { color: COLORS.accentLight, fontSize: 14, fontWeight: '600' },
+
+  // Trade Record
+  tradeRecordCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.accent + '30' },
+  tradeRecordRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
+  tradeRecordStat: { alignItems: 'center' },
+  tradeRecordValue: { color: COLORS.textPrimary, fontSize: 18, fontWeight: '900' },
+  tradeRecordLabel: { color: COLORS.textMuted, fontSize: 10, fontWeight: '600', marginTop: 2 },
+  resetButton: { backgroundColor: COLORS.bgInput, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 },
+  resetButtonText: { color: COLORS.textMuted, fontSize: 12, fontWeight: '600' },
 
   disclaimerCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.crl + '30' },
   disclaimerText: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18 },

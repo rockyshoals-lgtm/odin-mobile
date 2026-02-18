@@ -6,6 +6,10 @@ import { TierBadge } from '../../components/Common/TierBadge';
 import { fmtDateFull, fmtDaysUntil, fmtProb, daysUntil } from '../../utils/formatting';
 import { useWatchlistStore } from '../../stores/watchlistStore';
 import { usePredictionStore } from '../../stores/predictionStore';
+import { LivePriceBadge } from '../../components/Trading/LivePriceBadge';
+import { IntervalReturnsCard } from '../../components/Trading/IntervalReturnsCard';
+import { PaperTradeButton } from '../../components/Trading/PaperTradeButton';
+import { useMarketDataStore } from '../../stores/marketDataStore';
 
 interface Props {
   catalyst: Catalyst;
@@ -17,6 +21,7 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
   const { predictions, sentiment, submitVote, hasPredicted, reviewCatalyst } = usePredictionStore();
   const watched = isWatched(catalyst.id);
   const tierConfig = TIER_CONFIG[catalyst.tier as TierKey] || TIER_CONFIG.TIER_4;
+  const currentPrice = useMarketDataStore(s => s.getPrice(catalyst.ticker));
   const days = daysUntil(catalyst.date);
   const userVote = predictions[catalyst.id];
   const communityData = sentiment[catalyst.id];
@@ -83,6 +88,21 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
             <View style={styles.probBarBg}>
               <View style={[styles.probBarFill, { width: `${catalyst.prob * 100}%`, backgroundColor: tierConfig.color }]} />
             </View>
+          </View>
+
+          {/* Live Price */}
+          <View style={styles.section}>
+            <LivePriceBadge ticker={catalyst.ticker} />
+          </View>
+
+          {/* Expected Returns by Interval */}
+          <View style={styles.section}>
+            <IntervalReturnsCard catalyst={catalyst} currentPrice={currentPrice || undefined} />
+          </View>
+
+          {/* Paper Trade */}
+          <View style={styles.section}>
+            <PaperTradeButton ticker={catalyst.ticker} catalystId={catalyst.id} />
           </View>
 
           {/* Signal Breakdown */}

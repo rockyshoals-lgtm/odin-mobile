@@ -5,9 +5,10 @@ import { COLORS } from '../../constants/colors';
 import { CatalystsScreen } from '../../screens/Catalysts/CatalystsScreen';
 import { WatchlistScreen } from '../../screens/Watchlist/WatchlistScreen';
 import { PredictScreen } from '../../screens/Predict/PredictScreen';
-import { TrackRecordScreen } from '../../screens/TrackRecord/TrackRecordScreen';
+import { TradeScreen } from '../../screens/Trading/TradeScreen';
 import { SettingsScreen } from '../../screens/Settings/SettingsScreen';
 import { useWatchlistStore } from '../../stores/watchlistStore';
+import { usePaperTradeStore } from '../../stores/paperTradeStore';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,7 +17,7 @@ function TabIcon({ label, focused, badge }: { label: string; focused: boolean; b
     'Catalysts': '⚡',
     'Watchlist': '★',
     'Predict': '🎯',
-    'Record': '📊',
+    'Trade': '📈',
     'Settings': '⚙',
   };
 
@@ -34,6 +35,8 @@ function TabIcon({ label, focused, badge }: { label: string; focused: boolean; b
 
 export function BottomTabNavigator() {
   const { watchedIds } = useWatchlistStore();
+  const { positions } = usePaperTradeStore();
+  const positionCount = Object.keys(positions).length;
 
   return (
     <Tab.Navigator
@@ -67,10 +70,10 @@ export function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Record"
-        component={TrackRecordScreen}
+        name="Trade"
+        component={TradeScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Record" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Trade" focused={focused} badge={positionCount} />,
         }}
       />
       <Tab.Screen

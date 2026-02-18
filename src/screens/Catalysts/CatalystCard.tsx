@@ -4,6 +4,7 @@ import { COLORS, TIER_CONFIG, TierKey } from '../../constants/colors';
 import { Catalyst } from '../../constants/types';
 import { TierBadge } from '../../components/Common/TierBadge';
 import { CountdownChip } from '../../components/Common/CountdownChip';
+import { LivePriceBadge } from '../../components/Trading/LivePriceBadge';
 import { fmtDateShort, fmtProb } from '../../utils/formatting';
 import { useWatchlistStore } from '../../stores/watchlistStore';
 
@@ -44,6 +45,7 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
         <View style={styles.companyInfo}>
           <View style={styles.tickerRow}>
             <Text style={styles.ticker}>{catalyst.ticker}</Text>
+            <LivePriceBadge ticker={catalyst.ticker} compact />
             <Text style={styles.company}>{catalyst.company}</Text>
           </View>
           <Text style={styles.drug} numberOfLines={1}>{catalyst.drug}</Text>
