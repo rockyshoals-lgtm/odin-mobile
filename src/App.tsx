@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from './constants/colors';
 import { BottomTabNavigator } from './components/Navigation/BottomTabNavigator';
+import { WelcomeScreen } from './screens/Onboarding/WelcomeScreen';
 import { useCatalystStore } from './stores/catalystStore';
 import { CATALYSTS_DATA } from './constants/catalysts';
+
+const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 
 // Dark navigation theme
 const DarkTheme = {
@@ -57,17 +61,23 @@ function SplashScreen() {
       <Text style={splashStyles.logo}>ODIN</Text>
       <Text style={splashStyles.tagline}>FDA Catalyst Intelligence</Text>
       <ActivityIndicator color={COLORS.accentLight} style={{ marginTop: 24 }} />
-      <Text style={splashStyles.version}>v1.1.0 | Engine v10.69</Text>
+      <Text style={splashStyles.version}>v1.2.0-beta.1 | Engine v10.69</Text>
     </View>
   );
 }
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [welcomeSeen, setWelcomeSeen] = useState<boolean | null>(null);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const { setCatalysts } = useCatalystStore();
 
   useEffect(() => {
+    // Check if welcome screen was already seen
+    AsyncStorage.getItem(WELCOME_SEEN_KEY).then((val) => {
+      setWelcomeSeen(val === 'true');
+    });
+
     // Load catalyst data
     setCatalysts(CATALYSTS_DATA);
 
@@ -76,7 +86,13 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (loading) return <SplashScreen />;
+  const handleWelcomeContinue = async () => {
+    await AsyncStorage.setItem(WELCOME_SEEN_KEY, 'true');
+    setWelcomeSeen(true);
+  };
+
+  if (loading || welcomeSeen === null) return <SplashScreen />;
+  if (!welcomeSeen) return <WelcomeScreen onContinue={handleWelcomeContinue} />;
   if (!disclaimerAccepted) return <DisclaimerModal onAccept={() => setDisclaimerAccepted(true)} />;
 
   return (

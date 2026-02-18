@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { usePredictionStore } from '../../stores/predictionStore';
 import { useWatchlistStore } from '../../stores/watchlistStore';
 import { usePaperTradeStore } from '../../stores/paperTradeStore';
 import { fmtDollar, fmtPnLPct } from '../../utils/tradingUtils';
+
+const BETA_APK_URL = 'https://github.com/rockyshoals-lgtm/odin-mobile/releases/latest';
+const BETA_MESSAGE = `Check out ODIN — FDA Catalyst Intelligence app. We're beta testing it right now.\n\nPaper trade biotech catalysts with $100K, see ODIN approval probabilities, and experiment with options.\n\nDownload the APK: ${BETA_APK_URL}\n\n— ODIN Inner Circle`;
 
 export function SettingsScreen() {
   const { odinCoins, getCoinTier, getCoinTierEmoji, getNextTier, currentStreak, longestStreak, getStreakMultiplier } = usePredictionStore();
@@ -229,7 +232,7 @@ export function SettingsScreen() {
           <Text style={styles.sectionTitle}>ABOUT</Text>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutLogo}>ODIN</Text>
-            <Text style={styles.aboutVersion}>PDUFA.BIO Mobile v1.1.0</Text>
+            <Text style={styles.aboutVersion}>PDUFA.BIO Mobile v1.2.0-beta.1</Text>
             <Text style={styles.aboutEngine}>Engine: ODIN v10.69 | 63 Parameters</Text>
             <Text style={styles.aboutAccuracy}>96.0% Verified Accuracy | 50 Events</Text>
 
@@ -238,6 +241,36 @@ export function SettingsScreen() {
             <TouchableOpacity style={styles.aboutLink} onPress={() => Linking.openURL('https://pdufa.bio')}>
               <Text style={styles.aboutLinkText}>Visit pdufa.bio</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Share Beta */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>INNER CIRCLE BETA</Text>
+          <View style={styles.shareCard}>
+            <Text style={styles.shareTitle}>Share ODIN with Your Circle</Text>
+            <Text style={styles.shareDesc}>
+              Send the beta APK to your trusted crew. This build is for inner circle only —
+              share responsibly.
+            </Text>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={async () => {
+                try {
+                  await Share.share({
+                    message: BETA_MESSAGE,
+                    title: 'ODIN — FDA Catalyst Intelligence (Beta)',
+                  });
+                } catch (err) {
+                  // user cancelled
+                }
+              }}
+            >
+              <Text style={styles.shareButtonText}>SHARE APK WITH A BUD</Text>
+            </TouchableOpacity>
+            <Text style={styles.shareNote}>
+              They'll need to enable "Install unknown apps" on Android
+            </Text>
           </View>
         </View>
 
@@ -322,6 +355,14 @@ const styles = StyleSheet.create({
   tradeRecordLabel: { color: COLORS.textMuted, fontSize: 10, fontWeight: '600', marginTop: 2 },
   resetButton: { backgroundColor: COLORS.bgInput, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 },
   resetButtonText: { color: COLORS.textMuted, fontSize: 12, fontWeight: '600' },
+
+  // Share Beta
+  shareCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.approve + '30', alignItems: 'center' },
+  shareTitle: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 8 },
+  shareDesc: { color: COLORS.textSecondary, fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 14 },
+  shareButton: { backgroundColor: COLORS.accentBg, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 24, borderWidth: 1, borderColor: COLORS.accent, marginBottom: 8 },
+  shareButtonText: { color: COLORS.accentLight, fontSize: 13, fontWeight: '800', letterSpacing: 1.5 },
+  shareNote: { color: COLORS.textMuted, fontSize: 10, textAlign: 'center' },
 
   disclaimerCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.crl + '30' },
   disclaimerText: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18 },
