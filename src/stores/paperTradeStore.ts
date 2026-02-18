@@ -7,6 +7,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PaperAccount, Position, Trade, OptionPosition, OptionLeg, PortfolioMetrics } from '../constants/tradingTypes';
 import API_CONFIG from '../config/apiKeys';
+import { notificationService } from '../services/notificationService';
 
 interface PaperTradeState {
   // Account
@@ -126,6 +127,9 @@ export const usePaperTradeStore = create<PaperTradeState>()(
           tradeHistory: [trade, ...tradeHistory],
         });
 
+        // Send trade confirmation notification
+        notificationService.sendTradeConfirmation('BUY', ticker, quantity, price, cost).catch(() => {});
+
         return true;
       },
 
@@ -183,6 +187,9 @@ export const usePaperTradeStore = create<PaperTradeState>()(
           tradeHistory: [trade, ...tradeHistory],
         });
 
+        // Send trade confirmation notification
+        notificationService.sendTradeConfirmation('SELL', ticker, quantity, price, proceeds).catch(() => {});
+
         return true;
       },
 
@@ -203,23 +210,47 @@ export const usePaperTradeStore = create<PaperTradeState>()(
       },
 
       updatePrices: (prices) => {
-        const { positions } = get();
+        const { positions, account } = get();
         const updated = { ...positions };
         Object.entries(prices).forEach(([ticker, price]) => {
           if (updated[ticker]) {
             const pos = updated[ticker];
+            const oldPct = pos.totalCost > 0 ? ((pos.currentValue - pos.totalCost) / pos.totalCost) * 100 : 0;
             const currentValue = pos.quantity * price;
             const unrealizedPnL = currentValue - pos.totalCost;
+            const newPct = pos.totalCost > 0 ? (unrealizedPnL / pos.totalCost) * 100 : 0;
             updated[ticker] = {
               ...pos,
               currentPrice: price,
               currentValue,
               unrealizedPnL,
-              unrealizedPnLPct: pos.totalCost > 0 ? (unrealizedPnL / pos.totalCost) * 100 : 0,
+              unrealizedPnLPct: newPct,
               lastUpdated: new Date().toISOString(),
             };
+
+            // Check for significant price move alerts (crosses threshold)
+            const absPctChange = Math.abs(newPct - oldPct);
+            if (absPctChange >= 5) {
+              notificationService.sendPriceAlert(
+                ticker, price, newPct, newPct > oldPct ? 'up' : 'down'
+              ).catch(() => {});
+            }
           }
         });
+
+        // Check portfolio P&L threshold
+        const stockValue = Object.values(updated).reduce((sum, p) => sum + p.currentValue, 0);
+        const optValue = Object.values(get().optionPositions).reduce((sum, p) => sum + p.currentValue, 0);
+        const totalValue = account.balance + stockValue + optValue;
+        const totalPnL = totalValue - account.startingBalance;
+        const absPnL = Math.abs(totalPnL);
+        if (absPnL >= 1000 && absPnL % 1000 < 50) {
+          const threshold = Math.floor(absPnL / 1000) * 1000;
+          notificationService.sendPnLThresholdAlert(
+            totalPnL, totalPnL >= 0 ? 'profit' : 'loss', threshold
+          ).catch(() => {});
+        }
+
         set({ positions: updated });
       },
 
@@ -235,7 +266,7 @@ export const usePaperTradeStore = create<PaperTradeState>()(
           company: position.ticker,
           side: 'BUY',
           type: 'OPTION',
-          quantity: position.legs.reduce((sum, l) => sum + l.contracts, 0),
+          quantity: position.legs?.reduce((sum, l) => sum + l.contracts, 0) ?? 0,
           executedPrice: position.totalCost,
           executedAt: new Date().toISOString(),
           totalValue: position.totalCost,
@@ -263,7 +294,7 @@ export const usePaperTradeStore = create<PaperTradeState>()(
           company: pos.ticker,
           side: 'SELL',
           type: 'OPTION',
-          quantity: pos.legs.reduce((sum, l) => sum + l.contracts, 0),
+          quantity: pos.legs?.reduce((sum, l) => sum + l.contracts, 0) ?? 0,
           executedPrice: currentValue,
           executedAt: new Date().toISOString(),
           totalValue: currentValue,

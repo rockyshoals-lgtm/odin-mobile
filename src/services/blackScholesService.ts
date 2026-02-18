@@ -36,6 +36,7 @@ export class BlackScholes {
    * r = risk-free rate, sigma = implied volatility
    */
   static callPrice(S: number, K: number, T: number, r: number, sigma: number): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0) return Math.max(S - K, 0);
     if (sigma <= 0) return Math.max(S * Math.exp(-r * T) - K * Math.exp(-r * T), 0);
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
@@ -44,6 +45,7 @@ export class BlackScholes {
   }
 
   static putPrice(S: number, K: number, T: number, r: number, sigma: number): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0) return Math.max(K - S, 0);
     if (sigma <= 0) return Math.max(K * Math.exp(-r * T) - S, 0);
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
@@ -54,18 +56,21 @@ export class BlackScholes {
   // ─── Greeks ─────────────────────────────────────────────────
 
   static delta(S: number, K: number, T: number, r: number, sigma: number, type: 'CALL' | 'PUT'): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0 || sigma <= 0) return type === 'CALL' ? (S > K ? 1 : 0) : (S < K ? -1 : 0);
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
     return type === 'CALL' ? normalCDF(d1) : normalCDF(d1) - 1;
   }
 
   static gamma(S: number, K: number, T: number, r: number, sigma: number): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0 || sigma <= 0) return 0;
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
     return normalPDF(d1) / (S * sigma * Math.sqrt(T));
   }
 
   static theta(S: number, K: number, T: number, r: number, sigma: number, type: 'CALL' | 'PUT'): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0) return 0;
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
     const d2 = d1 - sigma * Math.sqrt(T);
@@ -77,6 +82,7 @@ export class BlackScholes {
   }
 
   static vega(S: number, K: number, T: number, r: number, sigma: number): number {
+    if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) return 0;
     if (T <= 0 || sigma <= 0) return 0;
     const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
     return S * normalPDF(d1) * Math.sqrt(T) / 100;

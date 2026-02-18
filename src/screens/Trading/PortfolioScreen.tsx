@@ -83,8 +83,8 @@ export function PortfolioScreen({ onTrade }: { onTrade?: (ticker: string) => voi
           </View>
           <View style={styles.tradeStatRow}>
             <Text style={styles.tradeStatLabel}>Win Rate</Text>
-            <Text style={[styles.tradeStatValue, { color: metrics.winRate >= 50 ? COLORS.approve : COLORS.crl }]}>
-              {metrics.winRate.toFixed(1)}%
+            <Text style={[styles.tradeStatValue, { color: (metrics?.winRate ?? 0) >= 50 ? COLORS.approve : COLORS.crl }]}>
+              {(metrics?.winRate ?? 0).toFixed(1)}%
             </Text>
           </View>
           <View style={styles.tradeStatRow}>

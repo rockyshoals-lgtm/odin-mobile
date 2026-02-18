@@ -16,6 +16,8 @@ interface Props {
 
 export function IntervalReturnsCard({ catalyst, currentPrice }: Props) {
   const returns = CatalystReturnsService.getIntervalReturns(catalyst);
+  if (!returns || returns.length === 0) return null;
+
   const optimal = CatalystReturnsService.getOptimalEntry(catalyst);
   const days = daysUntil(catalyst.date);
   const tierConfig = TIER_CONFIG[catalyst.tier as TierKey] || TIER_CONFIG.TIER_4;

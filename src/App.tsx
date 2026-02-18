@@ -11,6 +11,7 @@ import { QuizResult } from './screens/Onboarding/QuizResult';
 import { OptionsTutorial } from './screens/Onboarding/OptionsTutorial';
 import { useCatalystStore } from './stores/catalystStore';
 import { CATALYSTS_DATA } from './constants/catalysts';
+import { notificationService } from './services/notificationService';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
@@ -81,6 +82,10 @@ export default function App() {
     const init = async () => {
       // Load catalyst data
       setCatalysts(CATALYSTS_DATA);
+
+      // Initialize push notifications
+      await notificationService.initialize();
+      await notificationService.scheduleDailySummary();
 
       // Check onboarding progress
       const [welcomeVal, quizVal] = await Promise.all([

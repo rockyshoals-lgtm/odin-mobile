@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
@@ -6,6 +6,7 @@ import { usePredictionStore } from '../../stores/predictionStore';
 import { useWatchlistStore } from '../../stores/watchlistStore';
 import { usePaperTradeStore } from '../../stores/paperTradeStore';
 import { fmtDollar, fmtPnLPct } from '../../utils/tradingUtils';
+import { notificationService, PortfolioNotifPrefs, DEFAULT_NOTIF_PREFS } from '../../services/notificationService';
 
 const BETA_APK_URL = 'https://github.com/rockyshoals-lgtm/odin-mobile/releases/latest';
 const BETA_MESSAGE = `Check out ODIN — FDA Catalyst Intelligence app. We're beta testing it right now.\n\nPaper trade biotech catalysts with $100K, see ODIN approval probabilities, and experiment with options.\n\nDownload the APK: ${BETA_APK_URL}\n\n— ODIN Inner Circle`;
@@ -22,6 +23,19 @@ export function SettingsScreen() {
   const [notifCEWS, setNotifCEWS] = useState(true);
   const [notifOutcome, setNotifOutcome] = useState(true);
   const [notifPrice, setNotifPrice] = useState(false);
+
+  // Portfolio notification prefs
+  const [portfolioPrefs, setPortfolioPrefs] = useState<PortfolioNotifPrefs>(DEFAULT_NOTIF_PREFS);
+
+  useEffect(() => {
+    notificationService.getPrefs().then(setPortfolioPrefs);
+  }, []);
+
+  const updatePortfolioPref = (key: keyof PortfolioNotifPrefs, value: boolean) => {
+    const updated = { ...portfolioPrefs, [key]: value };
+    setPortfolioPrefs(updated);
+    notificationService.savePrefs(updated);
+  };
 
   const nextTier = getNextTier();
   const coinTier = getCoinTier();
@@ -134,7 +148,7 @@ export function SettingsScreen() {
                 <Text style={styles.tradeRecordLabel}>Total Trades</Text>
               </View>
               <View style={styles.tradeRecordStat}>
-                <Text style={styles.tradeRecordValue}>{fmtPnLPct(metrics.winRate * 100)}</Text>
+                <Text style={styles.tradeRecordValue}>{(metrics.winRate ?? 0).toFixed(1)}%</Text>
                 <Text style={styles.tradeRecordLabel}>Win Rate</Text>
               </View>
               <View style={styles.tradeRecordStat}>
@@ -223,6 +237,79 @@ export function SettingsScreen() {
               value={true}
               trackColor={{ false: COLORS.bgInput, true: COLORS.coinBg }}
               thumbColor={COLORS.coin}
+            />
+          </View>
+        </View>
+
+        {/* Portfolio Notifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PORTFOLIO ALERTS</Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Trade Confirmations</Text>
+              <Text style={styles.settingDesc}>Notify when paper trades execute</Text>
+            </View>
+            <Switch
+              value={portfolioPrefs.tradeConfirmations}
+              onValueChange={(v) => updatePortfolioPref('tradeConfirmations', v)}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.accentBg }}
+              thumbColor={portfolioPrefs.tradeConfirmations ? COLORS.accent : COLORS.textMuted}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Price Move Alerts</Text>
+              <Text style={styles.settingDesc}>Alert when positions move ±{portfolioPrefs.priceMovePct}%</Text>
+            </View>
+            <Switch
+              value={portfolioPrefs.priceAlerts}
+              onValueChange={(v) => updatePortfolioPref('priceAlerts', v)}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.accentBg }}
+              thumbColor={portfolioPrefs.priceAlerts ? COLORS.accent : COLORS.textMuted}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>P&L Threshold Alerts</Text>
+              <Text style={styles.settingDesc}>Alert when total P&L crosses ±${portfolioPrefs.pnlThresholdAmount.toLocaleString()}</Text>
+            </View>
+            <Switch
+              value={portfolioPrefs.pnlThresholdAlerts}
+              onValueChange={(v) => updatePortfolioPref('pnlThresholdAlerts', v)}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.accentBg }}
+              thumbColor={portfolioPrefs.pnlThresholdAlerts ? COLORS.accent : COLORS.textMuted}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Catalyst Reminders</Text>
+              <Text style={styles.settingDesc}>Remind before PDUFA on held positions</Text>
+            </View>
+            <Switch
+              value={portfolioPrefs.catalystReminders}
+              onValueChange={(v) => updatePortfolioPref('catalystReminders', v)}
+              trackColor={{ false: COLORS.bgInput, true: 'rgba(168,85,247,0.3)' }}
+              thumbColor={portfolioPrefs.catalystReminders ? COLORS.cews : COLORS.textMuted}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Daily Summary</Text>
+              <Text style={styles.settingDesc}>End-of-day portfolio recap at 4:30 PM</Text>
+            </View>
+            <Switch
+              value={portfolioPrefs.dailySummary}
+              onValueChange={(v) => {
+                updatePortfolioPref('dailySummary', v);
+                if (v) notificationService.scheduleDailySummary();
+              }}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.coinBg }}
+              thumbColor={portfolioPrefs.dailySummary ? COLORS.coin : COLORS.textMuted}
             />
           </View>
         </View>

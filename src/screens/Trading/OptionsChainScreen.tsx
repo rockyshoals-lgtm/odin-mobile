@@ -81,6 +81,7 @@ export function OptionsChainScreen({ ticker: initTicker, catalystId }: Props) {
 
   const handleStrategy = (strategy: typeof STRATEGY_TEMPLATES[0]) => {
     if (!chain || price <= 0) return;
+    if (!chain.calls || chain.calls.length === 0) return;
 
     // Find ATM strike
     const atm = chain.calls.reduce((closest, c) =>
@@ -92,6 +93,7 @@ export function OptionsChainScreen({ ticker: initTicker, catalystId }: Props) {
     const legs: OptionLeg[] = strategy.legs.map(legTemplate => {
       const strikeTarget = atm.strike + (legTemplate.strikeOffset * increment);
       const options = legTemplate.type === 'CALL' ? chain.calls : chain.puts;
+      if (!options || options.length === 0) return null;
       const contract = options.reduce((closest, o) =>
         Math.abs(o.strike - strikeTarget) < Math.abs(closest.strike - strikeTarget) ? o : closest
       );
@@ -153,9 +155,9 @@ export function OptionsChainScreen({ ticker: initTicker, catalystId }: Props) {
           {isATM ? ' ◀ ATM' : ''}
         </Text>
         <Text style={styles.optionPremium}>{fmtPrice(contract.premium)}</Text>
-        <Text style={styles.optionGreek}>{contract.greeks.delta.toFixed(2)}</Text>
-        <Text style={styles.optionGreek}>{contract.greeks.theta.toFixed(3)}</Text>
-        <Text style={styles.optionGreek}>{contract.greeks.vega.toFixed(3)}</Text>
+        <Text style={styles.optionGreek}>{(contract.greeks?.delta ?? 0).toFixed(2)}</Text>
+        <Text style={styles.optionGreek}>{(contract.greeks?.theta ?? 0).toFixed(3)}</Text>
+        <Text style={styles.optionGreek}>{(contract.greeks?.vega ?? 0).toFixed(3)}</Text>
       </TouchableOpacity>
     );
   };

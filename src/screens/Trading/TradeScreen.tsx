@@ -10,6 +10,7 @@ import { PortfolioScreen } from './PortfolioScreen';
 import { OptionsChainScreen } from './OptionsChainScreen';
 import { TradeEntryScreen } from './TradeEntryScreen';
 import { fmtDollar, pnlColor } from '../../utils/tradingUtils';
+import { useRealtimePrices } from '../../hooks/useRealtimePrices';
 
 type SubTab = 'PORTFOLIO' | 'OPTIONS';
 
@@ -18,6 +19,9 @@ export function TradeScreen() {
   const [showTradeEntry, setShowTradeEntry] = useState(false);
   const [tradeTicker, setTradeTicker] = useState<string | undefined>();
   const { getTotalValue, getPortfolioMetrics } = usePaperTradeStore();
+
+  // Auto-poll prices every 30s during market hours
+  useRealtimePrices();
 
   const metrics = getPortfolioMetrics();
 

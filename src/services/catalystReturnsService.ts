@@ -92,8 +92,7 @@ export class CatalystReturnsService {
     let bestInterval: CatalystInterval = 'T-30';
 
     returns.forEach(r => {
-      if (r.stdDeviation === 0) return;
-      const ratio = r.expectedReturnPct / r.stdDeviation;
+      const ratio = r.stdDeviation > 0 ? r.expectedReturnPct / r.stdDeviation : 0;
       if (ratio > bestRatio) {
         bestRatio = ratio;
         bestInterval = r.interval;

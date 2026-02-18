@@ -118,7 +118,7 @@ export function TradeEntryScreen({ ticker: initialTicker, catalystId, onClose }:
               <View style={styles.priceRight}>
                 {quote && (
                   <Text style={[styles.priceChange, { color: pnlColor(quote.changePct) }]}>
-                    {quote.changePct >= 0 ? '+' : ''}{quote.changePct?.toFixed(2)}%
+                    {quote.changePct >= 0 ? '+' : ''}{(quote.changePct ?? 0).toFixed(2)}%
                   </Text>
                 )}
                 {quote?.marketCap ? (

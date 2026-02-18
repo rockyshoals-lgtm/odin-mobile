@@ -14,22 +14,22 @@ export function GreeksDisplay({ greeks }: GreeksDisplayProps) {
   const greekItems = [
     {
       label: 'Delta (Δ)',
-      value: greeks.delta.toFixed(4),
+      value: (greeks?.delta ?? 0).toFixed(4),
       description: 'Price sensitivity',
     },
     {
       label: 'Gamma (Γ)',
-      value: greeks.gamma.toFixed(4),
+      value: (greeks?.gamma ?? 0).toFixed(4),
       description: 'Delta change rate',
     },
     {
       label: 'Theta (Θ)',
-      value: greeks.theta.toFixed(4),
+      value: (greeks?.theta ?? 0).toFixed(4),
       description: 'Time decay $/day',
     },
     {
       label: 'Vega (ν)',
-      value: greeks.vega.toFixed(4),
+      value: (greeks?.vega ?? 0).toFixed(4),
       description: 'IV sensitivity',
     },
   ];
