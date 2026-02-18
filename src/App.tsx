@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator, Linking } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,6 +15,7 @@ import { notificationService } from './services/notificationService';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
+const WEB_URL = 'https://pdufa.bio?access=odin-allfather-9realms-2026';
 
 type OnboardingStep = 'loading' | 'confidential' | 'welcome' | 'quiz' | 'quiz-result' | 'tutorial' | 'disclaimer' | 'app';
 
@@ -78,6 +79,14 @@ function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
 
       <TouchableOpacity style={confidentialStyles.acceptBtn} onPress={onAcknowledge} activeOpacity={0.8}>
         <Text style={confidentialStyles.acceptText}>I AM WORTHY — PROCEED</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={confidentialStyles.webLink}
+        onPress={() => Linking.openURL(WEB_URL)}
+        activeOpacity={0.7}
+      >
+        <Text style={confidentialStyles.webLinkText}>🌐  Open PDUFA.BIO on Web</Text>
       </TouchableOpacity>
     </View>
   );
@@ -312,6 +321,17 @@ const confidentialStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 2,
+  },
+  webLink: {
+    marginTop: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  webLinkText: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });
 

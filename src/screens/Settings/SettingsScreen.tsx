@@ -331,6 +331,23 @@ export function SettingsScreen() {
           </View>
         </View>
 
+        {/* Open Web Version */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>WEB PLATFORM</Text>
+          <TouchableOpacity
+            style={styles.webLinkCard}
+            onPress={() => Linking.openURL('https://pdufa.bio?access=odin-allfather-9realms-2026')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.webLinkEmoji}>🌐</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.webLinkTitle}>Open PDUFA.BIO on Web</Text>
+              <Text style={styles.webLinkDesc}>Full dashboard, paper trading, options — no password needed</Text>
+            </View>
+            <Text style={styles.webLinkArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Share Beta */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>INNER CIRCLE BETA</Text>
@@ -442,6 +459,22 @@ const styles = StyleSheet.create({
   tradeRecordLabel: { color: COLORS.textMuted, fontSize: 10, fontWeight: '600', marginTop: 2 },
   resetButton: { backgroundColor: COLORS.bgInput, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 },
   resetButtonText: { color: COLORS.textMuted, fontSize: 12, fontWeight: '600' },
+
+  // Web Link
+  webLinkCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.accent + '30',
+    gap: 12,
+  },
+  webLinkEmoji: { fontSize: 24 },
+  webLinkTitle: { color: COLORS.accentLight, fontSize: 14, fontWeight: '700' as const },
+  webLinkDesc: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
+  webLinkArrow: { color: COLORS.accent, fontSize: 18, fontWeight: '700' as const },
 
   // Share Beta
   shareCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.approve + '30', alignItems: 'center' },
