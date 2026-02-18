@@ -53,16 +53,22 @@ export const useCatalystStore = create<CatalystState>()(
         const { catalysts, filterTier, filterTA, filterType, searchQuery, sortField, sortDirection, dateRange } = get();
         let filtered = [...catalysts];
 
-        // Date range filter
+        // Date range filter — only show upcoming events
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() + dateRange);
         const now = new Date();
-        // For past earnings/readouts (within last 7 days), include them too
-        const pastCutoff = new Date();
-        pastCutoff.setDate(pastCutoff.getDate() - 7);
+        now.setHours(0, 0, 0, 0);
+        // PDUFAs: keep up to 3 days past (decision may still be pending)
+        // Others: only future
         filtered = filtered.filter(c => {
-          const d = new Date(c.date);
-          return d >= pastCutoff && d <= cutoff;
+          const d = new Date(c.date + 'T00:00:00');
+          if (d > cutoff) return false;
+          if (c.type === 'PDUFA') {
+            const pastLimit = new Date(now);
+            pastLimit.setDate(pastLimit.getDate() - 3);
+            return d >= pastLimit;
+          }
+          return d >= now;
         });
 
         // Type filter
