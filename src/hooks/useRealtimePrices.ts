@@ -43,18 +43,16 @@ export function useRealtimePrices(additionalTickers: string[] = []) {
       if (tickers.length === 0) return;
 
       try {
-        const quotes = await fetchQuotes(tickers);
-        // Update paper trade position prices
-        if (quotes) {
-          const priceMap: Record<string, number> = {};
-          const storeQuotes = useMarketDataStore.getState().quotes;
-          tickers.forEach(t => {
-            const q = storeQuotes[t];
-            if (q?.price) priceMap[t] = q.price;
-          });
-          if (Object.keys(priceMap).length > 0) {
-            updatePrices(priceMap);
-          }
+        await fetchQuotes(tickers);
+        // Update paper trade position prices from store
+        const priceMap: Record<string, number> = {};
+        const storeQuotes = useMarketDataStore.getState().quotes;
+        tickers.forEach(t => {
+          const q = storeQuotes[t];
+          if (q?.price) priceMap[t] = q.price;
+        });
+        if (Object.keys(priceMap).length > 0) {
+          updatePrices(priceMap);
         }
       } catch (err) {
         console.warn('[RealtimePrices] Refresh failed:', err);

@@ -90,7 +90,7 @@ export function OptionsChainScreen({ ticker: initTicker, catalystId }: Props) {
 
     const increment = chain.calls.length > 1 ? Math.abs(chain.calls[1].strike - chain.calls[0].strike) : 2.5;
 
-    const legs: OptionLeg[] = strategy.legs.map(legTemplate => {
+    const legs = (strategy.legs.map(legTemplate => {
       const strikeTarget = atm.strike + (legTemplate.strikeOffset * increment);
       const options = legTemplate.type === 'CALL' ? chain.calls : chain.puts;
       if (!options || options.length === 0) return null;
@@ -108,7 +108,7 @@ export function OptionsChainScreen({ ticker: initTicker, catalystId }: Props) {
         currentPremium: contract.premium,
         greeks: contract.greeks,
       };
-    });
+    }) as (OptionLeg | null)[]).filter((l): l is OptionLeg => l !== null);
 
     const totalCost = legs.reduce((sum, l) => {
       const mult = l.position === 'LONG' ? 1 : -1;
