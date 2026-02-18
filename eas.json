@@ -1,7 +1,6 @@
 {
   "cli": {
-    "version": ">= 12.0.0",
-    "appVersionSource": "remote"
+    "version": ">= 12.0.0"
   },
   "build": {
     "development": {
@@ -13,33 +12,12 @@
     },
     "preview": {
       "distribution": "internal",
-      "ios": {
-        "simulator": false
-      },
       "android": {
         "buildType": "apk"
       }
     },
-    "testflight": {
-      "distribution": "store",
-      "autoIncrement": true,
-      "channel": "testflight",
-      "ios": {
-        "simulator": false
-      }
-    },
     "production": {
-      "autoIncrement": true,
-      "channel": "production"
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "rockyshoals@gmail.com",
-        "ascAppId": "",
-        "appleTeamId": ""
-      }
+      "autoIncrement": true
     }
   }
 }
