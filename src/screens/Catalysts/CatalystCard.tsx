@@ -31,8 +31,10 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
         <View style={styles.dateRow}>
           <Text style={styles.dateText}>{fmtDateShort(catalyst.date)}</Text>
           <CountdownChip date={catalyst.date} />
-          <View style={[styles.typeBadge, { backgroundColor: catalyst.type === 'PDUFA' ? 'rgba(59,130,246,0.15)' : 'rgba(168,85,247,0.15)' }]}>
-            <Text style={[styles.typeText, { color: catalyst.type === 'PDUFA' ? COLORS.accent : COLORS.cews }]}>{catalyst.type}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: catalyst.type === 'Earnings' ? COLORS.earningsBg : catalyst.type === 'READOUT' ? COLORS.readoutBg : COLORS.pdufaBg }]}>
+            <Text style={[styles.typeText, { color: catalyst.type === 'Earnings' ? COLORS.earnings : catalyst.type === 'READOUT' ? COLORS.readout : COLORS.pdufa }]}>
+              {catalyst.type === 'READOUT' ? `${catalyst.phase || ''} Readout`.trim() : catalyst.type}
+            </Text>
           </View>
         </View>
         <Pressable onPress={() => toggle(catalyst.id)} hitSlop={12}>
@@ -51,7 +53,7 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
           <Text style={styles.drug} numberOfLines={1}>{catalyst.drug}</Text>
           <Text style={styles.indication} numberOfLines={1}>{catalyst.indication}</Text>
         </View>
-        <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />
+        {catalyst.type !== 'Earnings' && <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />}
       </View>
 
       {/* Bottom: Designations + TA */}
@@ -64,10 +66,12 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
         ))}
       </View>
 
-      {/* Probability bar */}
-      <View style={styles.probBarBg}>
-        <View style={[styles.probBarFill, { width: `${catalyst.prob * 100}%`, backgroundColor: tierConfig.color }]} />
-      </View>
+      {/* Probability bar — hide for Earnings */}
+      {catalyst.type !== 'Earnings' && catalyst.prob > 0 && (
+        <View style={styles.probBarBg}>
+          <View style={[styles.probBarFill, { width: `${catalyst.prob * 100}%`, backgroundColor: tierConfig.color }]} />
+        </View>
+      )}
     </TouchableOpacity>
   );
 }

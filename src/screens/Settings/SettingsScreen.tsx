@@ -7,6 +7,9 @@ import { useWatchlistStore } from '../../stores/watchlistStore';
 import { usePaperTradeStore } from '../../stores/paperTradeStore';
 import { fmtDollar, fmtPnLPct } from '../../utils/tradingUtils';
 import { notificationService, PortfolioNotifPrefs, DEFAULT_NOTIF_PREFS } from '../../services/notificationService';
+import { catalystAlertService, CatalystAlertPrefs, DEFAULT_ALERT_PREFS } from '../../services/catalystAlertService';
+import { CATALYSTS_DATA } from '../../constants/catalysts';
+import { TextInput as RNTextInput } from 'react-native';
 
 const BETA_APK_URL = 'https://expo.dev/accounts/huginn/projects/odin-mobile/builds';
 const BETA_MESSAGE = `Check out ODIN — FDA Catalyst Intelligence app. We're beta testing it right now.\n\nPaper trade biotech catalysts with $100K, see ODIN approval probabilities, and experiment with options.\n\nDownload the APK: ${BETA_APK_URL}\n\n— ODIN Inner Circle`;
@@ -27,14 +30,44 @@ export function SettingsScreen() {
   // Portfolio notification prefs
   const [portfolioPrefs, setPortfolioPrefs] = useState<PortfolioNotifPrefs>(DEFAULT_NOTIF_PREFS);
 
+  // Catalyst alert prefs
+  const [alertPrefs, setAlertPrefs] = useState<CatalystAlertPrefs>(DEFAULT_ALERT_PREFS);
+  const [permissionStatus, setPermissionStatus] = useState<string>('undetermined');
+  const [scheduledCount, setScheduledCount] = useState(0);
+
   useEffect(() => {
     notificationService.getPrefs().then(setPortfolioPrefs);
+    catalystAlertService.getPrefs().then(setAlertPrefs);
+    catalystAlertService.getPermissionStatus().then(s => setPermissionStatus(s));
+    catalystAlertService.getPendingCount().then(setScheduledCount);
   }, []);
 
   const updatePortfolioPref = (key: keyof PortfolioNotifPrefs, value: boolean) => {
     const updated = { ...portfolioPrefs, [key]: value };
     setPortfolioPrefs(updated);
     notificationService.savePrefs(updated);
+  };
+
+  const updateAlertPref = async (key: keyof CatalystAlertPrefs, value: any) => {
+    const updated = { ...alertPrefs, [key]: value };
+    setAlertPrefs(updated);
+    await catalystAlertService.savePrefs(updated);
+  };
+
+  const handleRequestNotifPermission = async () => {
+    const granted = await catalystAlertService.requestPermission();
+    setPermissionStatus(granted ? 'granted' : 'denied');
+    if (granted) {
+      const count = await catalystAlertService.scheduleAllAlerts(CATALYSTS_DATA);
+      setScheduledCount(count);
+      Alert.alert('Notifications Enabled', `${count} catalyst alerts scheduled!`);
+    }
+  };
+
+  const handleRescheduleAlerts = async () => {
+    const count = await catalystAlertService.scheduleAllAlerts(CATALYSTS_DATA);
+    setScheduledCount(count);
+    Alert.alert('Alerts Updated', `${count} catalyst alerts scheduled.`);
   };
 
   const nextTier = getNextTier();
@@ -314,6 +347,143 @@ export function SettingsScreen() {
           </View>
         </View>
 
+        {/* Catalyst Alert Schedule */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>CATALYST ALERT SCHEDULE</Text>
+
+          {/* Permission Status */}
+          {permissionStatus !== 'granted' ? (
+            <TouchableOpacity style={styles.permissionCard} onPress={handleRequestNotifPermission}>
+              <Text style={styles.permissionEmoji}>🔔</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.permissionTitle}>Enable Notifications</Text>
+                <Text style={styles.permissionDesc}>Get T-60 → T-1 alerts for PDUFA buy/sell windows</Text>
+              </View>
+              <Text style={styles.permissionAction}>ENABLE</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.alertStatusCard}>
+              <Text style={styles.alertStatusText}>🔔 {scheduledCount} alerts scheduled</Text>
+              <TouchableOpacity onPress={handleRescheduleAlerts}>
+                <Text style={styles.alertRefresh}>↻ Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Buy Window Alerts */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>🟢 Buy Window (T-60/T-45/T-30)</Text>
+              <Text style={styles.settingDesc}>Alert when optimal entry window opens</Text>
+            </View>
+            <Switch
+              value={alertPrefs.buyWindowAlerts}
+              onValueChange={v => { updateAlertPref('buyWindowAlerts', v); }}
+              trackColor={{ false: COLORS.bgInput, true: 'rgba(34,197,94,0.3)' }}
+              thumbColor={alertPrefs.buyWindowAlerts ? COLORS.approve : COLORS.textMuted}
+            />
+          </View>
+
+          {/* Sell Window Alerts */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>🔴 Sell Window (T-14/T-7/T-3)</Text>
+              <Text style={styles.settingDesc}>Alert when exit window approaches</Text>
+            </View>
+            <Switch
+              value={alertPrefs.sellWindowAlerts}
+              onValueChange={v => { updateAlertPref('sellWindowAlerts', v); }}
+              trackColor={{ false: COLORS.bgInput, true: 'rgba(239,68,68,0.3)' }}
+              thumbColor={alertPrefs.sellWindowAlerts ? COLORS.crl : COLORS.textMuted}
+            />
+          </View>
+
+          {/* Catalyst Day Alerts */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>⚡ Catalyst Day (T-1/T-DAY)</Text>
+              <Text style={styles.settingDesc}>Alert on the eve and day of the catalyst</Text>
+            </View>
+            <Switch
+              value={alertPrefs.catalystDayAlerts}
+              onValueChange={v => { updateAlertPref('catalystDayAlerts', v); }}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.coinBg }}
+              thumbColor={alertPrefs.catalystDayAlerts ? COLORS.coin : COLORS.textMuted}
+            />
+          </View>
+
+          {/* Alert Method: Email */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>📧 Email Alerts</Text>
+              <Text style={styles.settingDesc}>Receive catalyst alerts via email</Text>
+            </View>
+            <Switch
+              value={alertPrefs.emailEnabled}
+              onValueChange={v => { updateAlertPref('emailEnabled', v); }}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.accentBg }}
+              thumbColor={alertPrefs.emailEnabled ? COLORS.accent : COLORS.textMuted}
+            />
+          </View>
+          {alertPrefs.emailEnabled && (
+            <View style={styles.inputRow}>
+              <RNTextInput
+                style={styles.alertInput}
+                placeholder="your@email.com"
+                placeholderTextColor={COLORS.textMuted}
+                value={alertPrefs.email}
+                onChangeText={v => updateAlertPref('email', v)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          )}
+
+          {/* Alert Method: Phone/SMS */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>📱 SMS/Phone Alerts</Text>
+              <Text style={styles.settingDesc}>Receive catalyst alerts via text message</Text>
+            </View>
+            <Switch
+              value={alertPrefs.phoneEnabled}
+              onValueChange={v => { updateAlertPref('phoneEnabled', v); }}
+              trackColor={{ false: COLORS.bgInput, true: COLORS.accentBg }}
+              thumbColor={alertPrefs.phoneEnabled ? COLORS.accent : COLORS.textMuted}
+            />
+          </View>
+          {alertPrefs.phoneEnabled && (
+            <View style={styles.inputRow}>
+              <RNTextInput
+                style={styles.alertInput}
+                placeholder="+1 (555) 123-4567"
+                placeholderTextColor={COLORS.textMuted}
+                value={alertPrefs.phone}
+                onChangeText={v => updateAlertPref('phone', v)}
+                keyboardType="phone-pad"
+              />
+            </View>
+          )}
+
+          {/* Minimum Tier Filter */}
+          <View style={styles.tierFilterRow}>
+            <Text style={styles.tierFilterLabel}>Alert Minimum Tier:</Text>
+            <View style={styles.tierFilterChips}>
+              {(['TIER_1', 'TIER_2', 'TIER_3', 'TIER_4'] as const).map(tier => (
+                <TouchableOpacity
+                  key={tier}
+                  style={[styles.tierFilterChip, alertPrefs.minTier === tier && styles.tierFilterChipActive]}
+                  onPress={() => updateAlertPref('minTier', tier)}
+                >
+                  <Text style={[styles.tierFilterChipText, alertPrefs.minTier === tier && styles.tierFilterChipTextActive]}>
+                    {tier.replace('TIER_', 'T')}+
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
         {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ABOUT</Text>
@@ -486,4 +656,72 @@ const styles = StyleSheet.create({
 
   disclaimerCard: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.crl + '30' },
   disclaimerText: { color: COLORS.textMuted, fontSize: 12, lineHeight: 18 },
+
+  // Catalyst Alert Styles
+  permissionCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: COLORS.accentBg,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    gap: 12,
+    marginBottom: 8,
+  },
+  permissionEmoji: { fontSize: 28 },
+  permissionTitle: { color: COLORS.accentLight, fontSize: 15, fontWeight: '700' as const },
+  permissionDesc: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  permissionAction: { color: COLORS.accent, fontSize: 13, fontWeight: '800' as const, letterSpacing: 1 },
+
+  alertStatusCard: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.approve + '30',
+    marginBottom: 8,
+  },
+  alertStatusText: { color: COLORS.approve, fontSize: 13, fontWeight: '600' as const },
+  alertRefresh: { color: COLORS.accentLight, fontSize: 13, fontWeight: '700' as const },
+
+  inputRow: { paddingVertical: 8 },
+  alertInput: {
+    backgroundColor: COLORS.bgInput,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
+  tierFilterRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  tierFilterLabel: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' as const },
+  tierFilterChips: { flexDirection: 'row' as const, gap: 6 },
+  tierFilterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: COLORS.bgInput,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tierFilterChipActive: {
+    backgroundColor: COLORS.accentBg,
+    borderColor: COLORS.accent,
+  },
+  tierFilterChipText: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700' as const },
+  tierFilterChipTextActive: { color: COLORS.accentLight },
 });

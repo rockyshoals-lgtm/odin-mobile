@@ -40,6 +40,14 @@ export const COLORS = {
   cews: '#a855f7',         // purple-500
   cewsBg: 'rgba(168, 85, 247, 0.15)',
 
+  // Catalyst type colors
+  earnings: '#06b6d4',     // cyan-500
+  earningsBg: 'rgba(6, 182, 212, 0.15)',
+  readout: '#a855f7',      // purple-500
+  readoutBg: 'rgba(168, 85, 247, 0.15)',
+  pdufa: '#3b82f6',        // blue-500
+  pdufaBg: 'rgba(59, 130, 246, 0.15)',
+
   // Outcome colors
   approve: '#22c55e',
   crl: '#ef4444',

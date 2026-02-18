@@ -8,11 +8,13 @@ import { CatalystCard } from './CatalystCard';
 import { CatalystDetail } from './CatalystDetail';
 
 const TIER_FILTERS = [null, 'TIER_1', 'TIER_2', 'TIER_3', 'TIER_4'] as const;
-const DATE_RANGES = [30, 60, 90] as const;
-const TA_LIST = ['Oncology', 'CNS', 'Cardiology', 'Immunology', 'Rare Disease', 'Infectious Disease', 'Dermatology', 'Ophthalmology', 'Hematology', 'Metabolic'];
+const DATE_RANGES = [30, 60, 90, 180, 365] as const;
+const TYPE_FILTERS = [null, 'PDUFA', 'READOUT', 'Earnings'] as const;
+const TYPE_LABELS: Record<string, string> = { PDUFA: '💊 PDUFA', READOUT: '🔬 Readout', Earnings: '📊 Earnings' };
+const TA_LIST = ['Oncology', 'CNS', 'Cardiology', 'Immunology', 'Rare Disease', 'Infectious Disease', 'Dermatology', 'Ophthalmology', 'Hematology', 'Metabolic', 'GI/Hepatology'];
 
 export function CatalystsScreen() {
-  const { getFiltered, filterTier, setFilterTier, filterTA, setFilterTA, searchQuery, setSearchQuery, dateRange, setDateRange } = useCatalystStore();
+  const { getFiltered, filterTier, setFilterTier, filterTA, setFilterTA, filterType, setFilterType, searchQuery, setSearchQuery, dateRange, setDateRange } = useCatalystStore();
   const [selectedCatalyst, setSelectedCatalyst] = useState<Catalyst | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -28,7 +30,7 @@ export function CatalystsScreen() {
     return () => handler.remove();
   }, [selectedCatalyst]);
 
-  const filtered = useMemo(() => getFiltered(), [getFiltered, filterTier, filterTA, searchQuery, dateRange]);
+  const filtered = useMemo(() => getFiltered(), [getFiltered, filterTier, filterTA, filterType, searchQuery, dateRange]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -77,7 +79,7 @@ export function CatalystsScreen() {
             onPress={() => setDateRange(range)}
           >
             <Text style={[styles.rangeText, dateRange === range && styles.rangeTextActive]}>
-              {range}d
+              {range === 365 ? '1Y' : range === 180 ? '6M' : `${range}d`}
             </Text>
           </TouchableOpacity>
         ))}
@@ -99,6 +101,26 @@ export function CatalystsScreen() {
           );
         })}
       </View>
+
+      {/* Catalyst Type Filters */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow} contentContainerStyle={styles.typeRowContent}>
+        {TYPE_FILTERS.map(type => {
+          const isActive = filterType === type;
+          const bgColor = type === 'Earnings' ? COLORS.earningsBg : type === 'READOUT' ? COLORS.readoutBg : type === 'PDUFA' ? COLORS.pdufaBg : COLORS.accentBg;
+          const fgColor = type === 'Earnings' ? COLORS.earnings : type === 'READOUT' ? COLORS.readout : type === 'PDUFA' ? COLORS.pdufa : COLORS.accentLight;
+          return (
+            <TouchableOpacity
+              key={type || 'all-types'}
+              style={[styles.typeChip, isActive && { backgroundColor: bgColor, borderColor: fgColor }]}
+              onPress={() => setFilterType(type as any)}
+            >
+              <Text style={[styles.typeChipText, isActive && { color: fgColor }]}>
+                {type ? TYPE_LABELS[type] || type : '🎯 All Types'}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       {/* TA Pills */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.taPills} contentContainerStyle={styles.taPillsContent}>
@@ -253,6 +275,27 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  typeRow: {
+    maxHeight: 36,
+    marginBottom: 6,
+  },
+  typeRowContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  typeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: COLORS.bgInput,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  typeChipText: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
   },
   taPills: {
     maxHeight: 34,

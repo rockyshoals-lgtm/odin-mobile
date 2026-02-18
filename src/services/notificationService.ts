@@ -109,6 +109,13 @@ class NotificationService {
             name: 'Daily Summary',
             importance: Notifications.AndroidImportance.LOW,
           });
+
+          await Notifications.setNotificationChannelAsync('catalyst-alerts', {
+            name: 'Catalyst Buy/Sell Alerts',
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 300, 200, 300],
+            lightColor: '#22c55e',
+          });
         } catch (channelErr) {
           console.warn('[Notifications] Channel setup failed (Expo Go?):', channelErr);
         }

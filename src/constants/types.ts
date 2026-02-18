@@ -7,7 +7,7 @@ export interface Catalyst {
   ticker: string;
   drug: string;
   indication: string;
-  type: 'PDUFA' | 'READOUT' | 'AdCom' | 'sNDA';
+  type: 'PDUFA' | 'READOUT' | 'AdCom' | 'sNDA' | 'Earnings';
   appType?: string;
   ta: string;
   phase?: string;
