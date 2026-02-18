@@ -53,7 +53,7 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
           <Text style={styles.drug} numberOfLines={1}>{catalyst.drug}</Text>
           <Text style={styles.indication} numberOfLines={1}>{catalyst.indication}</Text>
         </View>
-        {catalyst.type !== 'Earnings' && <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />}
+        {catalyst.type === 'PDUFA' && catalyst.prob > 0 && <TierBadge tier={catalyst.tier} prob={catalyst.prob} size="lg" />}
       </View>
 
       {/* Bottom: Designations + TA */}
@@ -66,8 +66,8 @@ export function CatalystCard({ catalyst, onPress }: CatalystCardProps) {
         ))}
       </View>
 
-      {/* Probability bar — hide for Earnings */}
-      {catalyst.type !== 'Earnings' && catalyst.prob > 0 && (
+      {/* Probability bar — only for PDUFA with scored prob */}
+      {catalyst.type === 'PDUFA' && catalyst.prob > 0 && (
         <View style={styles.probBarBg}>
           <View style={[styles.probBarFill, { width: `${catalyst.prob * 100}%`, backgroundColor: tierConfig.color }]} />
         </View>
