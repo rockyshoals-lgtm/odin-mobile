@@ -88,21 +88,10 @@ export default function App() {
         .then(() => notificationService.scheduleDailySummary())
         .catch(() => console.warn('[App] Notification init skipped'));
 
-      // Check onboarding progress
-      const [welcomeVal, quizVal] = await Promise.all([
-        AsyncStorage.getItem(WELCOME_SEEN_KEY),
-        AsyncStorage.getItem(QUIZ_DONE_KEY),
-      ]);
-
-      // Determine starting step
+      // Always show welcome screen on every app launch
+      // (quiz/tutorial progress is still remembered so returning users skip those)
       setTimeout(() => {
-        if (welcomeVal !== 'true') {
-          setStep('welcome');
-        } else if (quizVal !== 'true') {
-          setStep('quiz');
-        } else {
-          setStep('disclaimer');
-        }
+        setStep('welcome');
       }, 1500);
     };
     init();
@@ -111,7 +100,13 @@ export default function App() {
   // ─── Welcome Screen ─────────────────
   const handleWelcomeContinue = async () => {
     await AsyncStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setStep('quiz');
+    // If quiz was already completed, skip straight to disclaimer
+    const quizVal = await AsyncStorage.getItem(QUIZ_DONE_KEY);
+    if (quizVal === 'true') {
+      setStep('disclaimer');
+    } else {
+      setStep('quiz');
+    }
   };
 
   // ─── Quiz Complete ──────────────────

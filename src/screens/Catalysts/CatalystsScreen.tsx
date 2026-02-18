@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Modal } from 'react-native';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, StatusBar, RefreshControl, Modal, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TIER_CONFIG } from '../../constants/colors';
 import { Catalyst } from '../../constants/types';
@@ -15,6 +15,18 @@ export function CatalystsScreen() {
   const { getFiltered, filterTier, setFilterTier, filterTA, setFilterTA, searchQuery, setSearchQuery, dateRange, setDateRange } = useCatalystStore();
   const [selectedCatalyst, setSelectedCatalyst] = useState<Catalyst | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Android back button closes detail modal
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedCatalyst) {
+        setSelectedCatalyst(null);
+        return true;
+      }
+      return false;
+    });
+    return () => handler.remove();
+  }, [selectedCatalyst]);
 
   const filtered = useMemo(() => getFiltered(), [getFiltered, filterTier, filterTA, searchQuery, dateRange]);
 

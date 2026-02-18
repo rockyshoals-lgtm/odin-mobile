@@ -10,7 +10,7 @@ import { useMarketDataStore } from '../../stores/marketDataStore';
 import { fmtDollar, fmtPnL, fmtPnLPct, fmtPrice, fmtMarketCap, pnlColor } from '../../utils/tradingUtils';
 import { Position } from '../../constants/tradingTypes';
 
-export function PortfolioScreen({ onTrade }: { onTrade?: (ticker: string) => void }) {
+export function PortfolioScreen({ onTrade }: { onTrade?: (ticker: string, forceSide?: 'BUY' | 'SELL') => void }) {
   const { account, positions, optionPositions, tradeHistory, getPortfolioMetrics, updatePrices, resetAccount } = usePaperTradeStore();
   const { fetchQuotes, isRefreshing, quotes } = useMarketDataStore();
   const [refreshing, setRefreshing] = React.useState(false);

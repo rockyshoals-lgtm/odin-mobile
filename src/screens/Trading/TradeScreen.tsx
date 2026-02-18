@@ -2,7 +2,7 @@
 // Contains Portfolio, Options Chain, and Trade History as sub-sections
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { usePaperTradeStore } from '../../stores/paperTradeStore';
@@ -18,15 +18,26 @@ export function TradeScreen() {
   const [subTab, setSubTab] = useState<SubTab>('PORTFOLIO');
   const [showTradeEntry, setShowTradeEntry] = useState(false);
   const [tradeTicker, setTradeTicker] = useState<string | undefined>();
-  const { getTotalValue, getPortfolioMetrics } = usePaperTradeStore();
+  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const { getTotalValue, getPortfolioMetrics, getPosition } = usePaperTradeStore();
 
   // Auto-poll prices every 30s during market hours
   useRealtimePrices();
 
   const metrics = getPortfolioMetrics();
 
-  const handleTrade = (ticker?: string) => {
+  // Open trade entry — if ticker has an existing position, default to SELL
+  const handleTrade = (ticker?: string, forceSide?: 'BUY' | 'SELL') => {
     setTradeTicker(ticker);
+    if (forceSide) {
+      setTradeSide(forceSide);
+    } else if (ticker) {
+      // If user taps a position they hold, default to SELL
+      const pos = getPosition(ticker.toUpperCase());
+      setTradeSide(pos ? 'SELL' : 'BUY');
+    } else {
+      setTradeSide('BUY');
+    }
     setShowTradeEntry(true);
   };
 
@@ -82,6 +93,7 @@ export function TradeScreen() {
       <Modal visible={showTradeEntry} animationType="slide" transparent>
         <TradeEntryScreen
           ticker={tradeTicker}
+          initialSide={tradeSide}
           onClose={() => {
             setShowTradeEntry(false);
             setTradeTicker(undefined);

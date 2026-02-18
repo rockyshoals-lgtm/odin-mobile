@@ -2,7 +2,7 @@
 // Buy/sell order form with live price, balance check, one-click execution
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Pressable, BackHandler } from 'react-native';
 import { COLORS } from '../../constants/colors';
 import { usePaperTradeStore } from '../../stores/paperTradeStore';
 import { useMarketDataStore } from '../../stores/marketDataStore';
@@ -13,16 +13,26 @@ import { Catalyst } from '../../constants/types';
 interface Props {
   ticker?: string;
   catalystId?: string;
+  initialSide?: 'BUY' | 'SELL';
   onClose: () => void;
 }
 
-export function TradeEntryScreen({ ticker: initialTicker, catalystId, onClose }: Props) {
+export function TradeEntryScreen({ ticker: initialTicker, catalystId, initialSide = 'BUY', onClose }: Props) {
   const { account, buyStock, sellStock, getPosition } = usePaperTradeStore();
   const { fetchQuote, getQuote, quotes } = useMarketDataStore();
   const { catalysts } = useCatalystStore();
 
   const [ticker, setTicker] = useState(initialTicker || '');
-  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [side, setSide] = useState<'BUY' | 'SELL'>(initialSide);
+
+  // Android back button closes the trade modal
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => handler.remove();
+  }, [onClose]);
   const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
 

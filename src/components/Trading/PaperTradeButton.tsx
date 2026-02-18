@@ -1,8 +1,8 @@
 // ODIN Mobile — One-Click Paper Trade Button
 // Appears on CatalystDetail to quickly enter a stock or options trade
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, BackHandler } from 'react-native';
 import { COLORS } from '../../constants/colors';
 import { TradeEntryScreen } from '../../screens/Trading/TradeEntryScreen';
 import { OptionsChainScreen } from '../../screens/Trading/OptionsChainScreen';
@@ -20,6 +20,22 @@ export function PaperTradeButton({ ticker, catalystId }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { account, hasPosition, getPosition } = usePaperTradeStore();
   const position = getPosition(ticker);
+
+  // Android back button closes trade/options modals
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (showOptions) {
+        setShowOptions(false);
+        return true;
+      }
+      if (showTrade) {
+        setShowTrade(false);
+        return true;
+      }
+      return false;
+    });
+    return () => handler.remove();
+  }, [showTrade, showOptions]);
 
   return (
     <View style={styles.container}>

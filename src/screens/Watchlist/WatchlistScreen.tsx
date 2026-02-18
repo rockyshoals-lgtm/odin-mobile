@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { useCatalystStore } from '../../stores/catalystStore';
@@ -12,6 +12,18 @@ export function WatchlistScreen() {
   const { catalysts } = useCatalystStore();
   const { watchedIds } = useWatchlistStore();
   const [selectedCatalyst, setSelectedCatalyst] = useState<Catalyst | null>(null);
+
+  // Android back button closes detail modal
+  useEffect(() => {
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedCatalyst) {
+        setSelectedCatalyst(null);
+        return true;
+      }
+      return false;
+    });
+    return () => handler.remove();
+  }, [selectedCatalyst]);
 
   const watchedCatalysts = useMemo(() =>
     catalysts.filter(c => watchedIds.includes(c.id))
