@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Linking, Alert, Share, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import { usePredictionStore } from '../../stores/predictionStore';
@@ -68,6 +68,43 @@ export function SettingsScreen() {
     const count = await catalystAlertService.scheduleAllAlerts(CATALYSTS_DATA);
     setScheduledCount(count);
     Alert.alert('Alerts Updated', `${count} catalyst alerts scheduled.`);
+  };
+
+  // Bug report / feedback state
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'idea'>('bug');
+  const [feedbackSending, setFeedbackSending] = useState(false);
+
+  const handleSendFeedback = async () => {
+    const text = feedbackText.trim();
+    if (!text) {
+      Alert.alert('Empty Feedback', 'Please describe the bug or idea before sending.');
+      return;
+    }
+
+    setFeedbackSending(true);
+    const typeLabel = feedbackType === 'bug' ? 'Bug Report' : 'Feature Idea';
+    const emoji = feedbackType === 'bug' ? '🐛' : '💡';
+    const labels = feedbackType === 'bug' ? ['bug'] : ['enhancement'];
+
+    // Send via email to huginn@pdufa.bio
+    const subject = encodeURIComponent(`${emoji} ODIN ${typeLabel}`);
+    const body = encodeURIComponent(`${typeLabel}\nPlatform: ${Platform.OS} ${Platform.Version}\nApp: v1.2.0-beta.1\n\n${text}`);
+    const mailto = `mailto:huginn@pdufa.bio?subject=${subject}&body=${body}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(mailto);
+      if (canOpen) {
+        await Linking.openURL(mailto);
+        setFeedbackText('');
+      } else {
+        Alert.alert('No Email App', 'Please email huginn@pdufa.bio directly with your feedback.');
+      }
+    } catch {
+      Alert.alert('Could Not Send', 'Please email huginn@pdufa.bio directly with your feedback.');
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   const nextTier = getNextTier();
@@ -548,6 +585,65 @@ export function SettingsScreen() {
           </View>
         </View>
 
+        {/* Bug Report / Feedback */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>REPORT BUG / SHARE IDEA</Text>
+          <View style={styles.feedbackCard}>
+            <Text style={styles.feedbackIntro}>
+              Found a bug or have an idea to make ODIN better? Let us know — it goes straight to our dev team.
+            </Text>
+
+            {/* Type Selector */}
+            <View style={styles.feedbackTypeRow}>
+              <TouchableOpacity
+                style={[styles.feedbackTypeBtn, feedbackType === 'bug' && styles.feedbackTypeBtnActive]}
+                onPress={() => setFeedbackType('bug')}
+              >
+                <Text style={[styles.feedbackTypeBtnText, feedbackType === 'bug' && styles.feedbackTypeBtnTextActive]}>
+                  🐛 Bug Report
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.feedbackTypeBtn, feedbackType === 'idea' && styles.feedbackTypeBtnActiveIdea]}
+                onPress={() => setFeedbackType('idea')}
+              >
+                <Text style={[styles.feedbackTypeBtnText, feedbackType === 'idea' && styles.feedbackTypeBtnTextActiveIdea]}>
+                  💡 Feature Idea
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Text Input */}
+            <RNTextInput
+              style={styles.feedbackInput}
+              placeholder={feedbackType === 'bug' ? 'Describe the bug — what happened and what you expected...' : 'Describe your idea — what would make ODIN better?'}
+              placeholderTextColor={COLORS.textMuted}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            {/* Send Button */}
+            <TouchableOpacity
+              style={[styles.feedbackSendBtn, !feedbackText.trim() && styles.feedbackSendBtnDisabled]}
+              onPress={handleSendFeedback}
+              disabled={feedbackSending || !feedbackText.trim()}
+            >
+              {feedbackSending ? (
+                <ActivityIndicator size="small" color={COLORS.accentLight} />
+              ) : (
+                <Text style={styles.feedbackSendBtnText}>SEND TO TEAM</Text>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.feedbackNote}>
+              Opens your email app • Sent to huginn@pdufa.bio
+            </Text>
+          </View>
+        </View>
+
         {/* Disclaimer */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>LEGAL</Text>
@@ -724,4 +820,87 @@ const styles = StyleSheet.create({
   },
   tierFilterChipText: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700' as const },
   tierFilterChipTextActive: { color: COLORS.accentLight },
+
+  // Feedback / Bug Report
+  feedbackCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  feedbackIntro: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  feedbackTypeRow: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  feedbackTypeBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: COLORS.bgInput,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center' as const,
+  },
+  feedbackTypeBtnActive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: '#ef4444',
+  },
+  feedbackTypeBtnActiveIdea: {
+    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+    borderColor: '#eab308',
+  },
+  feedbackTypeBtnText: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    fontWeight: '700' as const,
+  },
+  feedbackTypeBtnTextActive: {
+    color: '#ef4444',
+  },
+  feedbackTypeBtnTextActiveIdea: {
+    color: '#eab308',
+  },
+  feedbackInput: {
+    backgroundColor: COLORS.bgInput,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 90,
+    marginBottom: 12,
+  },
+  feedbackSendBtn: {
+    backgroundColor: COLORS.accentBg,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    marginBottom: 8,
+  },
+  feedbackSendBtnDisabled: {
+    opacity: 0.4,
+  },
+  feedbackSendBtnText: {
+    color: COLORS.accentLight,
+    fontSize: 13,
+    fontWeight: '800' as const,
+    letterSpacing: 1.5,
+  },
+  feedbackNote: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    textAlign: 'center' as const,
+  },
 });
