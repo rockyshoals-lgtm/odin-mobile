@@ -15,6 +15,8 @@ import { notificationService } from './services/notificationService';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
+const CONFIDENTIAL_ACCEPTED_KEY = 'odin-confidential-accepted-v1.2';
+const DISCLAIMER_ACCEPTED_KEY = 'odin-disclaimer-accepted-v1.2';
 const WEB_URL = 'https://pdufa.bio?access=odin-allfather-9realms-2026';
 
 type OnboardingStep = 'loading' | 'confidential' | 'welcome' | 'quiz' | 'quiz-result' | 'tutorial' | 'disclaimer' | 'app';
@@ -38,7 +40,7 @@ const DarkTheme = {
   },
 };
 
-// Confidential access gate — shown before Welcome/Eye screen every launch
+// Confidential access gate — shown only on first launch
 function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
   return (
     <View style={confidentialStyles.container}>
@@ -46,39 +48,37 @@ function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
         <Text style={confidentialStyles.icon}>🔒</Text>
       </View>
 
-      <Text style={confidentialStyles.classification}>CLASSIFIED</Text>
+      <Text style={confidentialStyles.classification}>EXCLUSIVE ACCESS</Text>
       <View style={confidentialStyles.divider} />
 
       <Text style={confidentialStyles.headline}>
-        DO NOT DISTRIBUTE THIS APK.
+        WELCOME TO THE INNER CIRCLE
       </Text>
       <Text style={confidentialStyles.subheadline}>
-        Not to friends. Not to "people in the space."{'\n'}Not to your group chat. Not to anyone.
+        You're one of ten people with early access to ODIN.
       </Text>
 
       <View style={confidentialStyles.card}>
         <Text style={confidentialStyles.cardText}>
-          You have been admitted to a circle of exactly ten. Out of eight billion
-          on this planet, I find precisely ten tolerable enough to breathe the same
-          digital air — and you drew one of those slots.{'\n\n'}
-          This is not a public beta. This is not a soft launch. This is a velvet
-          rope with a bouncer who doesn't care about your name.
+          This is not a public beta. This is exclusive early access to the most advanced
+          FDA catalyst prediction engine on the planet.{'\n\n'}
+          Please keep this access private while we perfect the experience for public launch.
         </Text>
       </View>
 
       <View style={confidentialStyles.quoteCard}>
         <Text style={confidentialStyles.quoteText}>
-          "Three may keep a secret, if two of them are dead."
+          "The best time to plant a tree was 20 years ago. The second best time is now."
         </Text>
-        <Text style={confidentialStyles.quoteAttrib}>— Benjamin Franklin</Text>
+        <Text style={confidentialStyles.quoteAttrib}>— Chinese Proverb</Text>
       </View>
 
       <Text style={confidentialStyles.footnote}>
-        Treat the link accordingly.
+        Let's get started.
       </Text>
 
       <TouchableOpacity style={confidentialStyles.acceptBtn} onPress={onAcknowledge} activeOpacity={0.8}>
-        <Text style={confidentialStyles.acceptText}>I AM WORTHY — PROCEED</Text>
+        <Text style={confidentialStyles.acceptText}>I UNDERSTAND — LET'S GO</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -92,23 +92,23 @@ function ConfidentialGate({ onAcknowledge }: { onAcknowledge: () => void }) {
   );
 }
 
-// Disclaimer modal — shown every launch (attorneys require it)
+// Disclaimer modal — shown only on first launch
 function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
   return (
     <View style={disclaimerStyles.overlay}>
       <View style={disclaimerStyles.modal}>
         <Text style={disclaimerStyles.warningIcon}>⚖️</Text>
-        <Text style={disclaimerStyles.title}>MY LAWYERS MADE ME SAY THIS</Text>
+        <Text style={disclaimerStyles.title}>QUICK LEGAL NOTE</Text>
         <Text style={disclaimerStyles.intro}>
-          Look — I scored the best domain name in the universe for a biotech catalyst engine. Naturally, my attorneys said "congratulations, now put up a disclaimer." So here we are.
+          Before we dive in, here's the standard disclaimer (our attorneys insist):
         </Text>
         <Text style={disclaimerStyles.text}>
-          PDUFA.BIO is not affiliated with the FDA or any government agency. "PDUFA" refers to the Prescription Drug User Fee Act — we just built a really cool engine around it.{'\n\n'}
-          This is not financial advice. We are not registered investment advisors (not until mid-March anyway), broker-dealers (but oh my God, we're about to be — stay tuned), or financial planners.{'\n\n'}
-          ODIN scores are ML model outputs, not crystal balls. They do not predict the future and should never be the sole basis for any investment decision. All investing carries risk, including total loss.
+          PDUFA.BIO is not affiliated with the FDA or any government agency. "PDUFA" refers to the Prescription Drug User Fee Act — we built a prediction engine around FDA catalyst events.{'\n\n'}
+          This is not financial advice. ODIN scores are ML model outputs that help you make better-informed decisions. They should never be the sole basis for any investment decision.{'\n\n'}
+          All investing carries risk, including total loss. Trade responsibly.
         </Text>
         <TouchableOpacity style={disclaimerStyles.acceptBtn} onPress={onAccept}>
-          <Text style={disclaimerStyles.acceptText}>I GET IT — LET ME IN</Text>
+          <Text style={disclaimerStyles.acceptText}>GOT IT — SHOW ME ODIN</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -142,25 +142,46 @@ export default function App() {
         .then(() => notificationService.scheduleDailySummary())
         .catch(() => console.warn('[App] Notification init skipped'));
 
-      // Always show confidential gate → welcome screen on every app launch
-      // (quiz/tutorial progress is still remembered so returning users skip those)
+      // Check if user has completed onboarding
+      const confidentialAccepted = await AsyncStorage.getItem(CONFIDENTIAL_ACCEPTED_KEY);
+      const disclaimerAccepted = await AsyncStorage.getItem(DISCLAIMER_ACCEPTED_KEY);
+      const quizDone = await AsyncStorage.getItem(QUIZ_DONE_KEY);
+
       setTimeout(() => {
-        setStep('confidential');
+        // First-time user flow
+        if (!confidentialAccepted) {
+          setStep('confidential');
+        } else if (!disclaimerAccepted) {
+          setStep('disclaimer');
+        } else if (!quizDone) {
+          setStep('welcome');
+        } else {
+          // Returning user - go straight to app
+          setStep('app');
+        }
       }, 1500);
     };
     init();
   }, []);
 
   // ─── Confidential Gate ─────────────
-  const handleConfidentialAcknowledge = () => setStep('welcome');
+  const handleConfidentialAcknowledge = async () => {
+    await AsyncStorage.setItem(CONFIDENTIAL_ACCEPTED_KEY, 'true');
+    setStep('disclaimer');
+  };
+
+  // ─── Disclaimer Accepted ────────────
+  const handleDisclaimerAccept = async () => {
+    await AsyncStorage.setItem(DISCLAIMER_ACCEPTED_KEY, 'true');
+    setStep('welcome');
+  };
 
   // ─── Welcome Screen ─────────────────
   const handleWelcomeContinue = async () => {
     await AsyncStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    // If quiz was already completed, skip straight to disclaimer
     const quizVal = await AsyncStorage.getItem(QUIZ_DONE_KEY);
     if (quizVal === 'true') {
-      setStep('disclaimer');
+      setStep('app');
     } else {
       setStep('quiz');
     }
@@ -176,17 +197,14 @@ export default function App() {
   const handleStartTutorial = () => setStep('tutorial');
   const handleSkipToApp = async () => {
     await AsyncStorage.setItem(QUIZ_DONE_KEY, 'true');
-    setStep('disclaimer');
+    setStep('app');
   };
 
   // ─── Tutorial Complete ──────────────
   const handleTutorialComplete = async () => {
     await AsyncStorage.setItem(QUIZ_DONE_KEY, 'true');
-    setStep('disclaimer');
+    setStep('app');
   };
-
-  // ─── Disclaimer Accepted ────────────
-  const handleDisclaimerAccept = () => setStep('app');
 
   // ─── Render ─────────────────────────
   switch (step) {
@@ -194,6 +212,8 @@ export default function App() {
       return <SplashScreen />;
     case 'confidential':
       return <ConfidentialGate onAcknowledge={handleConfidentialAcknowledge} />;
+    case 'disclaimer':
+      return <DisclaimerModal onAccept={handleDisclaimerAccept} />;
     case 'welcome':
       return <WelcomeScreen onContinue={handleWelcomeContinue} />;
     case 'quiz':
@@ -202,8 +222,6 @@ export default function App() {
       return <QuizResult level={quizLevel} onStartTutorial={handleStartTutorial} onSkipToApp={handleSkipToApp} />;
     case 'tutorial':
       return <OptionsTutorial onComplete={handleTutorialComplete} />;
-    case 'disclaimer':
-      return <DisclaimerModal onAccept={handleDisclaimerAccept} />;
     case 'app':
       return (
         <SafeAreaProvider>
@@ -231,7 +249,7 @@ const confidentialStyles = StyleSheet.create({
     fontSize: 36,
   },
   classification: {
-    color: '#ef4444',
+    color: COLORS.accentLight,
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 6,
@@ -240,7 +258,7 @@ const confidentialStyles = StyleSheet.create({
   divider: {
     width: 60,
     height: 2,
-    backgroundColor: '#ef4444',
+    backgroundColor: COLORS.accentLight,
     opacity: 0.4,
     marginBottom: 20,
   },
@@ -254,7 +272,7 @@ const confidentialStyles = StyleSheet.create({
   },
   subheadline: {
     color: COLORS.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20,
@@ -264,7 +282,7 @@ const confidentialStyles = StyleSheet.create({
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: COLORS.accent + '40',
     marginBottom: 16,
     width: '100%',
   },
@@ -275,17 +293,17 @@ const confidentialStyles = StyleSheet.create({
     textAlign: 'center',
   },
   quoteCard: {
-    backgroundColor: 'rgba(234, 179, 8, 0.06)',
+    backgroundColor: 'rgba(59, 130, 246, 0.06)',
     borderRadius: 10,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.15)',
+    borderColor: COLORS.accent + '40',
     marginBottom: 12,
     width: '100%',
     alignItems: 'center',
   },
   quoteText: {
-    color: '#eab308',
+    color: COLORS.accentLight,
     fontSize: 13,
     fontStyle: 'italic',
     fontWeight: '600',
@@ -307,16 +325,16 @@ const confidentialStyles = StyleSheet.create({
     marginBottom: 24,
   },
   acceptBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: COLORS.accentBg,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderColor: COLORS.accent,
     width: '100%',
   },
   acceptText: {
-    color: '#ef4444',
+    color: COLORS.accentLight,
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 2,
@@ -368,14 +386,13 @@ const disclaimerStyles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 13,
     lineHeight: 20,
-    fontStyle: 'italic',
     marginBottom: 16,
     textAlign: 'center',
   },
   text: {
     color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 19,
     marginBottom: 24,
   },
   acceptBtn: {
