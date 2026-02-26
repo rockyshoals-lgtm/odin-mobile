@@ -15,6 +15,7 @@ import { notificationService } from './services/notificationService';
 import { fetchCatalysts, FetchResult } from './services/catalystApiService';
 import { initAnalytics, trackEvent } from './services/analyticsService';
 import { useDeepLinking, DeepLinkTarget } from './hooks/useDeepLinking';
+import { waitForWatchlistHydration } from './stores/watchlistStore';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
@@ -158,6 +159,10 @@ export default function App() {
       // ── Initialize analytics ─────────────────────────────
       await initAnalytics().catch(() => console.warn('[App] Analytics init skipped'));
       trackEvent('app_launched', { dataSource: 'initializing' });
+
+      // ── Wait for watchlist hydration (P2-007 fix) ──────
+      await waitForWatchlistHydration();
+      console.log('[App] Watchlist hydration complete');
 
       // ── Fetch catalyst data from API (with fallback) ─────
       const startTime = Date.now();
