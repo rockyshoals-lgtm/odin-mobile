@@ -1,0 +1,679 @@
+{
+  "meta": {
+    "version": "2.0",
+    "date": "2026-02-26",
+    "author": "ODIN AI",
+    "priority": "HIGH",
+    "context": "Phase 1 mobile-web integration is live. Phase 2 focuses on SEO optimization, cross-platform UX polish, and data quality improvements."
+  },
+
+  "seo_audit": {
+    "status": "STRONG",
+    "search_visibility": {
+      "google_indexed_pages": 9,
+      "ranking_keywords": [
+        "pdufa calendar 2026",
+        "FDA approval dates",
+        "biotech catalyst tracker",
+        "ODIN scoring engine",
+        "pdufa dates"
+      ],
+      "top_pages": [
+        "https://www.pdufa.bio (homepage)",
+        "https://www.pdufa.bio/pdufa-calendar-2026",
+        "https://www.pdufa.bio/odin",
+        "https://www.pdufa.bio/odin-track-record",
+        "https://www.pdufa.bio/runup"
+      ],
+      "verified_track_record_visible": true,
+      "recent_wins_prominent": true
+    },
+
+    "meta_tags": {
+      "status": "EXCELLENT",
+      "findings": [
+        "Title tags are descriptive and keyword-optimized",
+        "Meta descriptions are compelling with CTAs",
+        "Open Graph tags present for social sharing",
+        "Structured data likely implemented"
+      ]
+    },
+
+    "content_quality": {
+      "status": "EXCELLENT",
+      "strengths": [
+        "Verified track record with cryptographic timestamps builds trust",
+        "ODIN v1108 methodology is well-documented",
+        "Clear value proposition: AI probability scores vs free dates",
+        "Pricing page transparently shows Free/Pro/Elite tiers",
+        "Educational content (runup strategy, glossary, PDUFA explainers)"
+      ]
+    },
+
+    "technical_seo": {
+      "status": "GOOD",
+      "findings": [
+        "Next.js framework enables SSR/SSG for fast load times",
+        "Clean URL structure (/catalyst/:id, /pdufa-calendar-2026)",
+        "No obvious crawl errors detected"
+      ],
+      "recommendations": [
+        "Implement sitemap.xml with priority tagging (catalysts, pricing, track record)",
+        "Add robots.txt to guide crawlers to high-value pages",
+        "Consider prerendering catalyst detail pages for faster indexing"
+      ]
+    },
+
+    "mobile_seo": {
+      "status": "NEEDS_IMPROVEMENT",
+      "issues": [
+        "Mobile app not discoverable via app store search yet",
+        "No 'Download App' smart banner on mobile web",
+        "App store listing pages missing (redirect 404s)"
+      ]
+    }
+  },
+
+  "phase_2_priorities": [
+    {
+      "id": "P2-001",
+      "title": "Mobile App Smart Banner",
+      "description": "Show iOS/Android smart banners on pdufa.bio when viewed on mobile browsers. Prompts users to download the ODIN app with one tap.",
+      "priority": "HIGH",
+      "effort": "4 hours",
+      "impact": "Drives app installs from 25k+ monthly website visitors",
+      "files_to_modify": [
+        "pdufa-bio/src/components/MobileAppBanner.tsx (NEW)",
+        "pdufa-bio/src/App.jsx (add <MobileAppBanner /> component)"
+      ],
+      "implementation": {
+        "steps": [
+          "Detect user agent (iOS Safari, Android Chrome)",
+          "Check localStorage for 'banner-dismissed' flag",
+          "Render sticky top banner with: 'Get the ODIN App • Real-time PDUFA alerts • Download Now'",
+          "Button opens App Store (iOS) or Google Play (Android)",
+          "Dismissible with 'X' button (stores flag in localStorage)"
+        ],
+        "styling": {
+          "position": "fixed top-0 z-50",
+          "background": "bg-gradient-to-r from-purple-600 to-blue-600",
+          "text": "text-white font-medium text-sm",
+          "height": "56px",
+          "cta_button": "bg-white text-purple-700 rounded-full px-4 py-2"
+        },
+        "user_agent_detection": {
+          "ios": "navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')",
+          "android": "navigator.userAgent.includes('Android')",
+          "app_store_links": {
+            "ios": "https://apps.apple.com/app/odin-pdufa-tracker/id[APP_ID]",
+            "android": "https://play.google.com/store/apps/details?id=com.pdufa.odin"
+          }
+        }
+      }
+    },
+
+    {
+      "id": "P2-002",
+      "title": "Catalyst Detail: 'Open in App' Button",
+      "description": "On catalyst detail pages (pdufa.bio/catalyst/:id), show 'Open in ODIN App' button that triggers deep link (odin://catalyst/:id). If app not installed, prompt to download.",
+      "priority": "HIGH",
+      "effort": "3 hours",
+      "impact": "Seamless handoff from web browsing to mobile app tracking",
+      "files_to_modify": [
+        "pdufa-bio/src/pages/CatalystDetailPage.tsx (add button)"
+      ],
+      "implementation": {
+        "button_placement": "Below catalyst header, next to 'Add to Watchlist'",
+        "button_text": "Open in App",
+        "icon": "ExternalLink or Smartphone icon (Lucide)",
+        "onclick_behavior": {
+          "step_1": "Try opening odin://catalyst/:id",
+          "step_2_if_fails": "Show modal: 'Get the ODIN App to track this catalyst with real-time alerts. Download Now?'",
+          "fallback": "If user clicks Download Now, redirect to App Store / Google Play"
+        },
+        "code_snippet": "const handleOpenInApp = () => { window.location.href = `odin://catalyst/${catalystId}`; setTimeout(() => { setShowDownloadModal(true); }, 1500); };"
+      }
+    },
+
+    {
+      "id": "P2-003",
+      "title": "Mobile App: Catalyst Detail Polish",
+      "description": "Enhance the mobile catalyst detail screen with richer data: phase history, AdCom vote breakdown, sponsor track record snippet, 'Similar Catalysts' section.",
+      "priority": "MEDIUM",
+      "effort": "8 hours",
+      "impact": "Increases mobile app retention and session duration",
+      "files_to_modify": [
+        "odin-mobile/src/screens/Catalysts/CatalystDetail.tsx",
+        "odin-mobile/src/components/PhaseHistoryTimeline.tsx (NEW)",
+        "odin-mobile/src/components/SimilarCatalysts.tsx (NEW)"
+      ],
+      "new_sections": [
+        {
+          "title": "Phase History",
+          "description": "Visual timeline of Phase 1/2/3 trial dates and results. Shows progression from first-in-human to PDUFA date.",
+          "data_source": "clinicaltrials.gov API or hardcoded for key catalysts",
+          "ui": "Vertical timeline with checkpoints: Phase 1 Start → Phase 2 Results → Phase 3 Enrollment → NDA Filed → PDUFA Date"
+        },
+        {
+          "title": "Advisory Committee Vote",
+          "description": "If AdCom held, show vote breakdown: '16 Yes, 2 No, 1 Abstain — Approved'. Highlight impact on ODIN score.",
+          "data_source": "FDA AdCom database (manually curated for now)",
+          "ui": "Horizontal bar chart with green/red segments"
+        },
+        {
+          "title": "Sponsor Track Record",
+          "description": "Show sponsor's last 5 PDUFA outcomes with approval rate. Example: 'Eli Lilly: 4/5 approvals (80%)'",
+          "data_source": "CATALYSTS_DATA.filter(c => c.company === currentCatalyst.company)",
+          "ui": "Mini list with checkmarks/x-marks and approval %"
+        },
+        {
+          "title": "Similar Catalysts",
+          "description": "Recommend 3-5 catalysts in same TA, similar ODIN tier, or same sponsor. Tappable cards.",
+          "data_source": "CATALYSTS_DATA.filter(c => c.ta === currentCatalyst.ta && c.id !== currentCatalyst.id).slice(0, 5)",
+          "ui": "Horizontal scrollable cards with ticker, date, ODIN tier"
+        }
+      ]
+    },
+
+    {
+      "id": "P2-004",
+      "title": "Mobile App: Portfolio Tracker (Beta)",
+      "description": "Allow users to log paper trades and track P&L across catalysts. Includes manual entry (ticker, shares, entry price) and basic position summary.",
+      "priority": "MEDIUM",
+      "effort": "12 hours",
+      "impact": "Differentiates ODIN app from free calendars, increases stickiness",
+      "files_to_modify": [
+        "odin-mobile/src/screens/Portfolio/PortfolioScreen.tsx (NEW)",
+        "odin-mobile/src/screens/Portfolio/AddTradeModal.tsx (NEW)",
+        "odin-mobile/src/store/portfolioStore.ts (NEW - Zustand)",
+        "odin-mobile/src/navigation/AppNavigator.tsx (add Portfolio tab)"
+      ],
+      "features": [
+        "Manual trade entry: ticker, shares, entry price, entry date",
+        "Auto-link to catalyst by ticker (if exists in CATALYSTS_DATA)",
+        "P&L calculation: (current price - entry price) * shares",
+        "Position summary: total cost basis, current value, unrealized gain/loss",
+        "Historical trades list: closed positions with realized P&L",
+        "Export to CSV button (AsyncStorage → CSV string → Share sheet)"
+      ],
+      "data_model": {
+        "Trade": {
+          "id": "string (uuid)",
+          "ticker": "string",
+          "catalyst_id": "string | null (linked to CATALYSTS_DATA)",
+          "shares": "number",
+          "entry_price": "number",
+          "entry_date": "ISO string",
+          "exit_price": "number | null",
+          "exit_date": "ISO string | null",
+          "status": "'open' | 'closed'",
+          "notes": "string"
+        }
+      },
+      "ui_components": [
+        "Portfolio Summary Card: Total Invested, Current Value, Total P&L",
+        "Open Positions List: Card per position with ticker, shares, entry, current, P&L %",
+        "FAB (Floating Action Button): '+' to AddTradeModal",
+        "Catalyst Detail: If linked trade exists, show 'You have a position in $ALDX (100 shares)'"
+      ]
+    },
+
+    {
+      "id": "P2-005",
+      "title": "Mobile App: Push Notifications (T-7, T-1, Outcome)",
+      "description": "Implement push notifications for watchlisted catalysts at key milestones: T-7 days (runup window), T-1 day (reminder), and outcome announcement.",
+      "priority": "HIGH",
+      "effort": "16 hours",
+      "impact": "Drives re-engagement, critical for mobile app value prop",
+      "files_to_modify": [
+        "odin-mobile/src/services/pushNotificationService.ts (NEW)",
+        "odin-mobile/src/utils/schedulePushNotifications.ts (NEW)",
+        "odin-mobile/App.tsx (init push permissions)",
+        "odin-mobile/app.json (add expo-notifications plugin)"
+      ],
+      "implementation": {
+        "library": "expo-notifications",
+        "notification_triggers": [
+          {
+            "trigger": "T-7 days before PDUFA",
+            "title": "ALDX Reproxalap PDUFA in 7 days",
+            "body": "TIER_4 (1% approval) — Runup window opens. Review ODIN score.",
+            "data": {"catalystId": "aldx-reproxalap-2026-03-16", "screen": "CatalystDetail"}
+          },
+          {
+            "trigger": "T-1 day before PDUFA",
+            "title": "ALDX Reproxalap PDUFA tomorrow",
+            "body": "TIER_4 (1% approval) — Final check before decision date.",
+            "data": {"catalystId": "aldx-reproxalap-2026-03-16", "screen": "CatalystDetail"}
+          },
+          {
+            "trigger": "Outcome announced",
+            "title": "ALDX Reproxalap: CRL (Rejected)",
+            "body": "ODIN called it TIER_4. See outcome details.",
+            "data": {"catalystId": "aldx-reproxalap-2026-03-16", "screen": "CatalystDetail"}
+          }
+        ],
+        "scheduling_logic": {
+          "description": "Use expo-notifications scheduleNotificationAsync with trigger dates calculated from catalyst.date",
+          "notes": [
+            "Schedule all 3 notifications when user adds catalyst to watchlist",
+            "Cancel notifications if user removes catalyst from watchlist",
+            "Re-schedule if catalyst date changes (API refresh)",
+            "Store notification IDs in AsyncStorage for cancellation"
+          ]
+        },
+        "permission_prompt": {
+          "timing": "First time user adds to watchlist",
+          "message": "Get alerts when your tracked catalysts approach PDUFA dates. Allow notifications?",
+          "fallback_if_denied": "Show in-app banner: 'Enable notifications in Settings to get alerts'"
+        }
+      }
+    },
+
+    {
+      "id": "P2-006",
+      "title": "Website: Catalyst Page SEO Boost",
+      "description": "Enhance individual catalyst detail pages with structured data (JSON-LD), social meta tags, and rich snippets for Google Search.",
+      "priority": "MEDIUM",
+      "effort": "6 hours",
+      "impact": "Improves search visibility for long-tail queries like 'ALDX reproxalap FDA approval date'",
+      "files_to_modify": [
+        "pdufa-bio/src/pages/catalyst/[id].tsx (add <Head> with meta tags)",
+        "pdufa-bio/src/utils/generateStructuredData.ts (NEW)"
+      ],
+      "structured_data_schema": {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "ALDX Reproxalap PDUFA Date",
+        "startDate": "2026-03-16",
+        "endDate": "2026-03-16",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+        "organizer": {
+          "@type": "Organization",
+          "name": "U.S. FDA"
+        },
+        "location": {
+          "@type": "VirtualLocation",
+          "url": "https://www.pdufa.bio/catalyst/aldx-reproxalap-2026-03-16"
+        },
+        "description": "FDA PDUFA date for Aldeyra's Reproxalap (dry eye disease). ODIN predicts TIER_4 (1% approval) due to serial CRL history.",
+        "image": "https://www.pdufa.bio/og-image-aldx.png"
+      },
+      "open_graph_tags": {
+        "og:title": "ALDX Reproxalap PDUFA: March 16, 2026 | ODIN 1% Approval",
+        "og:description": "FDA decision date for Aldeyra's dry eye drug. ODIN v1108 scores TIER_4 (near-zero approval) due to prior CRLs.",
+        "og:image": "https://www.pdufa.bio/og-catalyst-aldx.png",
+        "og:url": "https://www.pdufa.bio/catalyst/aldx-reproxalap-2026-03-16",
+        "twitter:card": "summary_large_image"
+      }
+    },
+
+    {
+      "id": "P2-007",
+      "title": "Mobile App: Watchlist Persistence (AsyncStorage)",
+      "description": "Currently watchlist may reset on app restart. Ensure watchlist is reliably persisted to AsyncStorage and hydrated on launch.",
+      "priority": "HIGH",
+      "effort": "2 hours",
+      "impact": "Critical bug fix — users lose tracked catalysts",
+      "files_to_modify": [
+        "odin-mobile/src/store/watchlistStore.ts (add AsyncStorage sync)"
+      ],
+      "implementation": {
+        "steps": [
+          "On watchlist change (add/remove), write to AsyncStorage key 'odin-watchlist'",
+          "On app launch, read from AsyncStorage and hydrate Zustand store",
+          "Use JSON.stringify for serialization",
+          "Add error handling for AsyncStorage failures (fall back to in-memory)"
+        ],
+        "code_snippet": "const addToWatchlist = async (catalystId) => { const updated = [...watchlist, catalystId]; set({ watchlist: updated }); await AsyncStorage.setItem('odin-watchlist', JSON.stringify(updated)); };"
+      }
+    },
+
+    {
+      "id": "P2-008",
+      "title": "Website + Mobile: 'Share Catalyst' Feature",
+      "description": "Add share button on catalyst details (web and mobile) to copy link or share via native share sheet. Enables viral growth.",
+      "priority": "MEDIUM",
+      "effort": "4 hours",
+      "impact": "Drives organic traffic via social sharing",
+      "files_to_modify": [
+        "pdufa-bio/src/pages/catalyst/[id].tsx (add Share button)",
+        "odin-mobile/src/screens/Catalysts/CatalystDetail.tsx (add Share button)"
+      ],
+      "implementation": {
+        "web": {
+          "button_placement": "Next to 'Add to Watchlist' button",
+          "onclick": "navigator.clipboard.writeText(window.location.href); toast('Link copied!')",
+          "fallback": "If Web Share API available, use navigator.share()"
+        },
+        "mobile": {
+          "button_placement": "Header right, share icon",
+          "onclick": "Share.share({ message: 'Check out ALDX Reproxalap PDUFA on ODIN: https://pdufa.bio/catalyst/aldx-reproxalap-2026-03-16' })",
+          "library": "expo-sharing or react-native-share"
+        },
+        "share_text_template": "Check out {ticker} {drug} PDUFA on ODIN: TIER_{tier} ({prob}% approval) | {url}"
+      }
+    },
+
+    {
+      "id": "P2-009",
+      "title": "Mobile App: Onboarding Flow for New Users",
+      "description": "Add 3-screen onboarding on first launch: (1) Welcome to ODIN, (2) How ODIN Scoring Works, (3) Track Your First Catalyst.",
+      "priority": "MEDIUM",
+      "effort": "8 hours",
+      "impact": "Reduces churn for new users, improves comprehension of ODIN tiers",
+      "files_to_modify": [
+        "odin-mobile/src/screens/Onboarding/OnboardingScreen.tsx (NEW)",
+        "odin-mobile/src/navigation/AppNavigator.tsx (conditionally show onboarding)",
+        "odin-mobile/src/store/appStore.ts (add hasCompletedOnboarding flag)"
+      ],
+      "screens": [
+        {
+          "screen_1": {
+            "title": "Welcome to ODIN",
+            "subtitle": "AI-powered FDA approval predictions for biotech catalysts.",
+            "image": "Hero illustration (app icon + charts)",
+            "cta": "Next"
+          }
+        },
+        {
+          "screen_2": {
+            "title": "How ODIN Works",
+            "subtitle": "ODIN analyzes 54 signals from 2,210 historical PDUFAs to predict approval probability.",
+            "visual": "Tier badges with percentages: TIER_1 (85%+), TIER_2 (65-85%), TIER_3 (40-65%), TIER_4 (<40%)",
+            "cta": "Next"
+          }
+        },
+        {
+          "screen_3": {
+            "title": "Track Your First Catalyst",
+            "subtitle": "Add catalysts to your watchlist and get alerts before PDUFA dates.",
+            "image": "Screenshot of catalyst list with '+' button highlighted",
+            "cta": "Get Started"
+          }
+        }
+      ],
+      "completion_logic": {
+        "on_finish": "Set hasCompletedOnboarding = true in AsyncStorage",
+        "skip_option": "Show 'Skip' button on screen 1 only",
+        "never_show_again": "Once completed, never show again (unless user clears app data)"
+      }
+    },
+
+    {
+      "id": "P2-010",
+      "title": "Mobile App: Settings Screen Enhancements",
+      "description": "Add settings for: notification preferences, theme toggle (dark/light), analytics opt-out, clear cache, about/version info.",
+      "priority": "LOW",
+      "effort": "6 hours",
+      "impact": "Improves user control and transparency",
+      "files_to_modify": [
+        "odin-mobile/src/screens/Settings/SettingsScreen.tsx (enhance existing screen)"
+      ],
+      "new_settings": [
+        {
+          "section": "Notifications",
+          "options": [
+            {"label": "PDUFA Reminders (T-7 days)", "type": "toggle"},
+            {"label": "Outcome Alerts", "type": "toggle"},
+            {"label": "Market Open/Close Alerts", "type": "toggle"}
+          ]
+        },
+        {
+          "section": "Appearance",
+          "options": [
+            {"label": "Dark Mode", "type": "toggle", "note": "Currently dark mode only"}
+          ]
+        },
+        {
+          "section": "Data & Privacy",
+          "options": [
+            {"label": "Share Anonymous Analytics", "type": "toggle", "default": true},
+            {"label": "Clear Cache", "type": "button", "action": "Clear AsyncStorage cache for catalyst data"}
+          ]
+        },
+        {
+          "section": "About",
+          "options": [
+            {"label": "App Version", "type": "text", "value": "1.2.0 (Build 15)"},
+            {"label": "ODIN Engine", "type": "text", "value": "v10.69"},
+            {"label": "Privacy Policy", "type": "link", "url": "https://pdufa.bio/privacy"},
+            {"label": "Terms of Service", "type": "link", "url": "https://pdufa.bio/terms"}
+          ]
+        }
+      ]
+    }
+  ],
+
+  "quick_wins": [
+    {
+      "id": "QW-001",
+      "title": "Add 'Download App' Footer Badge on Website",
+      "effort": "30 minutes",
+      "files": ["pdufa-bio/src/components/Footer.tsx"],
+      "implementation": "Add App Store and Google Play badges below 'PDUFA.BIO © 2026' text. Link to store pages."
+    },
+    {
+      "id": "QW-002",
+      "title": "Mobile App: Haptic Feedback on Watchlist Add/Remove",
+      "effort": "15 minutes",
+      "files": ["odin-mobile/src/components/WatchlistButton.tsx"],
+      "implementation": "Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium) on toggle."
+    },
+    {
+      "id": "QW-003",
+      "title": "Website: Add 'Last Updated' Timestamp to Calendar",
+      "effort": "20 minutes",
+      "files": ["pdufa-bio/src/App.jsx"],
+      "implementation": "Show 'Data updated: Feb 26, 2026 6:00 PM ET' above catalyst table."
+    },
+    {
+      "id": "QW-004",
+      "title": "Mobile App: Pull-to-Refresh on Catalyst List",
+      "effort": "30 minutes",
+      "files": ["odin-mobile/src/screens/Catalysts/CatalystList.tsx"],
+      "implementation": "Wrap FlatList in RefreshControl that calls refreshCatalysts()."
+    }
+  ],
+
+  "data_quality_improvements": [
+    {
+      "id": "DQ-001",
+      "title": "Verify Catalyst IDs Are Unique",
+      "priority": "HIGH",
+      "description": "Check CATALYSTS_DATA for duplicate catalyst.id values. IDs must be unique for deep linking and analytics.",
+      "validation": "const ids = CATALYSTS_DATA.map(c => c.id); const hasDupes = ids.length !== new Set(ids).size;"
+    },
+    {
+      "id": "DQ-002",
+      "title": "Add NCT IDs for All Phase 3 Trials",
+      "priority": "MEDIUM",
+      "description": "Many catalysts have empty nctId fields. Populate with ClinicalTrials.gov identifiers for trial lookup.",
+      "impact": "Enables deep linking to trial details, builds trust"
+    },
+    {
+      "id": "DQ-003",
+      "title": "Standardize Ticker Symbols",
+      "priority": "MEDIUM",
+      "description": "Ensure ticker field uses consistent format (uppercase, no spaces). Example: 'ALDX' not 'aldx' or 'ALDX '.",
+      "validation": "CATALYSTS_DATA.forEach(c => { if (c.ticker !== c.ticker.trim().toUpperCase()) console.error(c.id); });"
+    },
+    {
+      "id": "DQ-004",
+      "title": "Add 'Updated At' Timestamp to API Response",
+      "priority": "HIGH",
+      "description": "Include 'updated_at' field in catalysts-v10-69.json so apps can show data freshness.",
+      "example": "{ \"version\": \"10.69\", \"updated_at\": \"2026-02-26T18:00:00Z\", \"catalysts\": [...] }"
+    }
+  ],
+
+  "analytics_enhancements": [
+    {
+      "id": "AN-001",
+      "title": "Track 'Catalyst Viewed' Duration",
+      "description": "Measure time spent on catalyst detail screens (both web and mobile). Indicates engagement level.",
+      "implementation": "Start timer on screen mount, log event on unmount with duration_seconds property."
+    },
+    {
+      "id": "AN-002",
+      "title": "Track Filter Usage Patterns",
+      "description": "Log which filters users apply most often (tier, TA, date range). Informs UI improvements.",
+      "events": ["filter_tier_applied", "filter_ta_applied", "filter_date_range_applied"]
+    },
+    {
+      "id": "AN-003",
+      "title": "Track 'Add to Watchlist' Conversion Rate",
+      "description": "Measure % of catalyst_viewed events that result in catalyst_added_to_watchlist.",
+      "calculation": "(count(catalyst_added_to_watchlist) / count(catalyst_viewed)) * 100"
+    },
+    {
+      "id": "AN-004",
+      "title": "Track App Install Attribution",
+      "description": "Use UTM parameters or deep link campaigns to track which channels drive app installs (website, social, ads).",
+      "implementation": "Expo + Branch.io or Firebase Dynamic Links for attribution."
+    }
+  ],
+
+  "performance_optimizations": [
+    {
+      "id": "PERF-001",
+      "title": "Lazy Load Catalyst Details",
+      "description": "On mobile, defer loading full catalyst data (signals, notes) until user taps into detail screen.",
+      "benefit": "Faster initial list render, reduces memory usage"
+    },
+    {
+      "id": "PERF-002",
+      "title": "Implement Virtual Scrolling for Catalyst List",
+      "description": "Use react-native FlatList with getItemLayout for constant-height items. Improves scroll performance on long lists.",
+      "files": ["odin-mobile/src/screens/Catalysts/CatalystList.tsx"]
+    },
+    {
+      "id": "PERF-003",
+      "title": "Compress API Response (Gzip)",
+      "description": "Enable gzip compression on pdufa.bio/api/catalysts-v10-69.json endpoint. Reduces payload from ~200KB to ~50KB.",
+      "implementation": "Add compression middleware in Next.js or enable on CDN (Cloudflare)."
+    },
+    {
+      "id": "PERF-004",
+      "title": "Cache API Response at CDN Level",
+      "description": "Set Cache-Control: public, max-age=3600 on API endpoint. Reduces server load, faster response for users.",
+      "implementation": "Add headers in Next.js API route or configure CDN caching rules."
+    }
+  ],
+
+  "testing_checklist": [
+    "✅ Deep links work from Safari (iOS) and Chrome (Android)",
+    "✅ Watchlist persists after app restart",
+    "✅ API fetch falls back to bundled data when offline",
+    "✅ Analytics events appear in console on dev builds",
+    "✅ 'View on Web' button opens correct catalyst page in browser",
+    "✅ Smart banner shows on mobile web (iOS Safari, Android Chrome)",
+    "✅ 'Open in App' button triggers deep link on web",
+    "✅ Push notifications arrive at T-7, T-1, and outcome times",
+    "✅ Portfolio P&L calculations are accurate",
+    "✅ Share catalyst feature copies correct link",
+    "✅ Onboarding flow completes and never shows again",
+    "✅ Settings toggles persist after app restart",
+    "✅ Pull-to-refresh updates catalyst list",
+    "✅ No duplicate catalyst IDs in CATALYSTS_DATA",
+    "✅ All tickers are uppercase and trimmed",
+    "✅ API response includes updated_at timestamp"
+  ],
+
+  "deployment_steps": [
+    {
+      "step": 1,
+      "action": "Deploy catalysts-v10-69.json API endpoint on pdufa.bio",
+      "command": "Ensure Next.js API route at /api/catalysts-v10-69.json returns fresh data",
+      "verification": "curl https://pdufa.bio/api/catalysts-v10-69.json | jq '.version'"
+    },
+    {
+      "step": 2,
+      "action": "Deploy .well-known files for Universal Links",
+      "files": [
+        "pdufa-bio/public/.well-known/apple-app-site-association",
+        "pdufa-bio/public/.well-known/assetlinks.json"
+      ],
+      "verification": "curl https://pdufa.bio/.well-known/apple-app-site-association"
+    },
+    {
+      "step": 3,
+      "action": "Test deep links on production build",
+      "ios": "xcrun simctl openurl booted https://pdufa.bio/catalyst/aldx-reproxalap-2026-03-16",
+      "android": "adb shell am start -a android.intent.action.VIEW -d https://pdufa.bio/catalyst/aldx-reproxalap-2026-03-16"
+    },
+    {
+      "step": 4,
+      "action": "Submit mobile app to App Store and Google Play",
+      "ios": "eas build --platform ios --profile production && eas submit --platform ios",
+      "android": "eas build --platform android --profile production && eas submit --platform android"
+    },
+    {
+      "step": 5,
+      "action": "Update website to show app download banners",
+      "component": "<MobileAppBanner /> in App.jsx",
+      "verification": "Open pdufa.bio on iPhone Safari — banner should appear at top"
+    },
+    {
+      "step": 6,
+      "action": "Enable push notifications (backend)",
+      "requirement": "Set up Expo Push Notification service + Firebase Cloud Messaging for delivery",
+      "verification": "Test sending push to device token via Expo Push API"
+    },
+    {
+      "step": 7,
+      "action": "Monitor analytics for 48 hours",
+      "metrics": [
+        "app_launched count (should increase after store approval)",
+        "deep_link_received count (should spike from web traffic)",
+        "catalyst_added_to_watchlist count",
+        "web_link_opened count (mobile → web handoff)"
+      ]
+    }
+  ],
+
+  "success_metrics": {
+    "week_1": {
+      "target_app_installs": 250,
+      "target_daily_active_users": 50,
+      "target_watchlist_adds": 500,
+      "target_deep_link_clicks": 100
+    },
+    "month_1": {
+      "target_app_installs": 1000,
+      "target_daily_active_users": 200,
+      "target_watchlist_adds": 2500,
+      "target_retention_d7": "40%",
+      "target_retention_d30": "25%"
+    },
+    "quarter_1": {
+      "target_app_installs": 5000,
+      "target_daily_active_users": 800,
+      "target_pro_conversions": 50,
+      "target_elite_conversions": 10
+    }
+  },
+
+  "summary": {
+    "phase_1_status": "COMPLETE ✅",
+    "phase_1_deliverables": [
+      "Unified Data API with cache + fallback",
+      "Deep linking (custom scheme + Universal Links)",
+      "View on Web buttons",
+      "Analytics foundation (12 tracked events)"
+    ],
+    "phase_2_focus": "SEO optimization, push notifications, portfolio tracker, onboarding UX",
+    "estimated_phase_2_effort": "75 hours",
+    "recommended_sprint_length": "2 weeks",
+    "priority_order": [
+      "P2-001: Mobile App Smart Banner (website)",
+      "P2-005: Push Notifications",
+      "P2-007: Watchlist Persistence Fix",
+      "P2-002: Open in App Button (website)",
+      "P2-003: Catalyst Detail Polish (mobile)",
+      "P2-009: Onboarding Flow",
+      "P2-004: Portfolio Tracker"
+    ]
+  }
+}
