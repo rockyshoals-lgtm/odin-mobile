@@ -1,0 +1,445 @@
+{
+  "audit_metadata": {
+    "date": "2026-02-26",
+    "version": "1.0",
+    "mobile_repo": "odin-mobile",
+    "web_repo": "pdufa-bio",
+    "mobile_url": "TBD (App Store / Google Play)",
+    "web_url": "https://pdufa.bio",
+    "goal": "Create seamless, fluid connection between mobile app and website for unified user experience"
+  },
+  "current_state_analysis": {
+    "mobile_app": {
+      "tech_stack": "React Native + Expo",
+      "version": "v1.2.0-beta.1",
+      "engine": "v10.69",
+      "screens": [
+        "Catalysts (Calendar)",
+        "Predict (Score calculator)",
+        "Track Record (Historical outcomes)",
+        "Trading (Strategy execution)",
+        "Watchlist (Favorites)",
+        "Settings"
+      ],
+      "services": [
+        "blackScholesService (Options pricing)",
+        "catalystAlertService (Push notifications)",
+        "catalystReturnsService (ROI calculations)",
+        "marketDataService (Real-time quotes)",
+        "notificationService (Alerts)",
+        "tradeExecutionService (Order routing)"
+      ],
+      "state_management": "Zustand",
+      "storage": "AsyncStorage",
+      "data_source": "Hardcoded CATALYSTS_DATA (no API sync)"
+    },
+    "website": {
+      "tech_stack": "Next.js + React",
+      "url": "https://pdufa.bio",
+      "features": [
+        "Dashboard with catalyst calendar",
+        "Top 5 TIER_1 widget",
+        "SHA-256 verification system",
+        "Competitor comparison table",
+        "Quick filters",
+        "Full methodology"
+      ],
+      "data_source": "Hardcoded CATALYSTS_DATA in App.jsx"
+    },
+    "current_integration": {
+      "status": "MINIMAL",
+      "existing_connection": "Button to open https://pdufa.bio?access=odin-allfather-9realms-2026",
+      "data_sync": "NONE (both use separate hardcoded datasets)",
+      "user_accounts": "NONE (no shared authentication)",
+      "cross_platform_state": "NONE (no sync)"
+    }
+  },
+  "integration_strategy": {
+    "phase_1_quick_wins": {
+      "timeframe": "< 1 week",
+      "priority": "CRITICAL",
+      "goals": [
+        "Unified data source (API or shared JSON)",
+        "Deep linking from mobile → website",
+        "Web → mobile app download prompts",
+        "Shared analytics events"
+      ]
+    },
+    "phase_2_seamless_ux": {
+      "timeframe": "1-2 weeks",
+      "priority": "HIGH",
+      "goals": [
+        "Shared authentication (optional login)",
+        "Sync watchlist / favorites",
+        "Cross-platform notifications",
+        "Universal search with deep links"
+      ]
+    },
+    "phase_3_advanced": {
+      "timeframe": "2-4 weeks",
+      "priority": "MEDIUM",
+      "goals": [
+        "Real-time data sync (WebSocket)",
+        "Portfolio sync (trade history)",
+        "Web app PWA with offline support",
+        "Mobile app web view for premium features"
+      ]
+    }
+  },
+  "phase_1_implementation_plan": {
+    "1_unified_data_api": {
+      "problem": "Mobile app and website use separate hardcoded CATALYSTS_DATA arrays that can drift out of sync",
+      "solution": "Create shared API endpoint or static JSON that both platforms fetch",
+      "options": [
+        {
+          "approach": "Static JSON on CDN (fastest)",
+          "steps": [
+            "1. Export CATALYSTS_DATA from website to catalysts-v10-69.json",
+            "2. Host on Vercel static assets: https://pdufa.bio/api/catalysts-v10-69.json",
+            "3. Mobile app fetches on launch with cache + fallback to bundled data",
+            "4. Version the JSON (v10-69) to force updates when ODIN engine changes"
+          ],
+          "pros": [
+            "No backend needed",
+            "Fast CDN delivery",
+            "Easy to update",
+            "Works offline with cache"
+          ],
+          "cons": [
+            "Manual updates required",
+            "No personalization"
+          ],
+          "estimated_effort": "2-4 hours"
+        },
+        {
+          "approach": "Next.js API Route (dynamic)",
+          "steps": [
+            "1. Create /api/catalysts route in pdufa-bio repo",
+            "2. Return JSON with versioning + optional user filtering",
+            "3. Mobile app calls https://pdufa.bio/api/catalysts on launch",
+            "4. Add ETag / Last-Modified headers for caching"
+          ],
+          "pros": [
+            "Dynamic filtering possible",
+            "Can add authentication later",
+            "Easy to extend with user-specific data"
+          ],
+          "cons": [
+            "Requires backend logic",
+            "More complex"
+          ],
+          "estimated_effort": "4-6 hours"
+        }
+      ],
+      "recommended": "Static JSON on CDN (fastest to ship)",
+      "code_example_web": "// pdufa-bio/public/api/catalysts-v10-69.json\n{\n  \"version\": \"10.69\",\n  \"updated_at\": \"2026-02-26T18:00:00Z\",\n  \"catalysts\": [...CATALYSTS_DATA]\n}",
+      "code_example_mobile": "// odin-mobile/src/services/catalystApiService.ts\nimport AsyncStorage from '@react-native-async-storage/async-storage';\nimport { CATALYSTS_DATA } from '../constants/catalysts';\n\nconst API_URL = 'https://pdufa.bio/api/catalysts-v10-69.json';\nconst CACHE_KEY = 'odin-catalysts-cache-v10-69';\nconst CACHE_DURATION = 1000 * 60 * 60; // 1 hour\n\nexport async function fetchCatalysts() {\n  try {\n    // Check cache first\n    const cached = await AsyncStorage.getItem(CACHE_KEY);\n    if (cached) {\n      const { data, timestamp } = JSON.parse(cached);\n      if (Date.now() - timestamp < CACHE_DURATION) {\n        return data;\n      }\n    }\n\n    // Fetch fresh data\n    const response = await fetch(API_URL, { timeout: 5000 });\n    if (!response.ok) throw new Error('API failed');\n    \n    const json = await response.json();\n    \n    // Cache for next time\n    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({\n      data: json.catalysts,\n      timestamp: Date.now()\n    }));\n    \n    return json.catalysts;\n  } catch (error) {\n    // Fallback to bundled data\n    console.warn('[CatalystAPI] Using bundled fallback:', error);\n    return CATALYSTS_DATA;\n  }\n}"
+    },
+    "2_deep_linking": {
+      "problem": "Users can't navigate directly from mobile app to specific website pages (and vice versa)",
+      "solution": "Implement universal links (iOS) and App Links (Android) with deep link handlers",
+      "use_cases": [
+        "Mobile app → Website: 'View on Web' button opens browser to specific catalyst detail",
+        "Website → Mobile app: 'Open in App' banner detects mobile + redirects to app",
+        "Shared links: Clicking pdufa.bio/catalyst/aldx-reproxalap opens mobile app if installed",
+        "Email/SMS notifications: Links intelligently route to app or web"
+      ],
+      "implementation": {
+        "mobile_side": {
+          "steps": [
+            "1. Add URL scheme to app.json: 'odin://' and 'https://pdufa.bio'",
+            "2. Configure associated domains in eas.json for iOS Universal Links",
+            "3. Add intent filters for Android App Links in app.json",
+            "4. Implement Linking.addEventListener in App.tsx to handle incoming URLs",
+            "5. Parse deep link parameters and navigate to correct screen"
+          ],
+          "code_example": "// app.json\n{\n  \"expo\": {\n    \"scheme\": \"odin\",\n    \"ios\": {\n      \"associatedDomains\": [\"applinks:pdufa.bio\"]\n    },\n    \"android\": {\n      \"intentFilters\": [\n        {\n          \"action\": \"VIEW\",\n          \"data\": [\n            { \"scheme\": \"https\", \"host\": \"pdufa.bio\" },\n            { \"scheme\": \"odin\" }\n          ],\n          \"category\": [\"BROWSABLE\", \"DEFAULT\"]\n        }\n      ]\n    }\n  }\n}\n\n// App.tsx deep link handler\nimport * as Linking from 'expo-linking';\nimport { useEffect } from 'react';\n\nfunction useDeepLinking(navigation) {\n  useEffect(() => {\n    const handleUrl = ({ url }: { url: string }) => {\n      const { hostname, path, queryParams } = Linking.parse(url);\n      \n      // pdufa.bio/catalyst/:id → navigate to catalyst detail\n      if (path?.includes('/catalyst/')) {\n        const catalystId = path.split('/catalyst/')[1];\n        navigation.navigate('CatalystDetail', { id: catalystId });\n      }\n      \n      // pdufa.bio/track-record → navigate to track record\n      else if (path?.includes('/track-record')) {\n        navigation.navigate('TrackRecord');\n      }\n      \n      // odin://watchlist → navigate to watchlist\n      else if (hostname === 'watchlist') {\n        navigation.navigate('Watchlist');\n      }\n    };\n    \n    // Handle initial URL (app opened from link)\n    Linking.getInitialURL().then((url) => {\n      if (url) handleUrl({ url });\n    });\n    \n    // Handle URLs while app is open\n    const subscription = Linking.addEventListener('url', handleUrl);\n    return () => subscription.remove();\n  }, [navigation]);\n}"
+        },
+        "website_side": {
+          "steps": [
+            "1. Detect mobile devices with user agent check",
+            "2. Show 'Open in ODIN App' banner at top of page",
+            "3. Generate deep link URLs: odin://catalyst/:id",
+            "4. Add .well-known/apple-app-site-association for iOS Universal Links",
+            "5. Add .well-known/assetlinks.json for Android App Links"
+          ],
+          "code_example": "// pdufa-bio/src/components/MobileAppBanner.tsx\nimport { useEffect, useState } from 'react';\n\nexport function MobileAppBanner({ catalystId }: { catalystId?: string }) {\n  const [showBanner, setShowBanner] = useState(false);\n  \n  useEffect(() => {\n    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);\n    const hasDismissed = localStorage.getItem('odin-app-banner-dismissed');\n    setShowBanner(isMobile && !hasDismissed);\n  }, []);\n  \n  if (!showBanner) return null;\n  \n  const deepLink = catalystId \n    ? `odin://catalyst/${catalystId}` \n    : 'odin://home';\n  \n  return (\n    <div className=\"fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 px-4 flex items-center justify-between\">\n      <div className=\"flex items-center gap-2\">\n        <span className=\"text-2xl\">📱</span>\n        <span className=\"font-semibold text-sm\">Open in ODIN App for faster access</span>\n      </div>\n      <div className=\"flex gap-2\">\n        <a \n          href={deepLink} \n          className=\"bg-white text-blue-600 px-4 py-1.5 rounded-lg font-bold text-xs\"\n        >\n          OPEN\n        </a>\n        <button \n          onClick={() => {\n            setShowBanner(false);\n            localStorage.setItem('odin-app-banner-dismissed', 'true');\n          }}\n          className=\"text-white/80 hover:text-white text-xs\"\n        >\n          ✕\n        </button>\n      </div>\n    </div>\n  );\n}"
+        }
+      },
+      "estimated_effort": "6-8 hours"
+    },
+    "3_mobile_download_prompts": {
+      "problem": "Website doesn't promote mobile app (missed conversion opportunity)",
+      "solution": "Add strategic 'Download ODIN App' CTAs on website",
+      "placement": [
+        "Smart banner at top (dismissed after 1 click)",
+        "Footer: App Store + Google Play badges",
+        "Settings page: 'Get the mobile app for push notifications'",
+        "After first catalyst click: Modal 'Track catalysts on the go'"
+      ],
+      "code_example": "// pdufa-bio/src/components/AppDownloadCTA.tsx\nexport function AppDownloadCTA() {\n  return (\n    <div className=\"bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 my-8\">\n      <div className=\"flex items-center justify-between\">\n        <div>\n          <h3 className=\"text-white font-bold text-lg mb-1\">\n            📱 Get ODIN Mobile\n          </h3>\n          <p className=\"text-white/80 text-sm\">\n            Push notifications • Faster access • Offline support\n          </p>\n        </div>\n        <div className=\"flex gap-3\">\n          <a href=\"https://apps.apple.com/app/odin\" target=\"_blank\" rel=\"noopener\">\n            <img src=\"/app-store-badge.svg\" alt=\"Download on App Store\" className=\"h-10\" />\n          </a>\n          <a href=\"https://play.google.com/store/apps/details?id=bio.pdufa.odin\" target=\"_blank\" rel=\"noopener\">\n            <img src=\"/google-play-badge.svg\" alt=\"Get it on Google Play\" className=\"h-10\" />\n          </a>\n        </div>\n      </div>\n    </div>\n  );\n}",
+      "estimated_effort": "2-3 hours"
+    },
+    "4_shared_analytics": {
+      "problem": "Can't track user journey across mobile and web (attribution gaps)",
+      "solution": "Unified analytics with cross-platform user IDs",
+      "tools": [
+        "Google Analytics 4 (supports app + web streams)",
+        "Mixpanel (excellent cross-platform tracking)",
+        "PostHog (open source, self-hosted option)"
+      ],
+      "events_to_track": [
+        "catalyst_viewed",
+        "catalyst_added_to_watchlist",
+        "trade_executed",
+        "notification_clicked",
+        "filter_applied",
+        "platform_switch (web → mobile or vice versa)"
+      ],
+      "implementation": {
+        "shared_user_id": "Generate anonymous UUID on first launch, store in AsyncStorage (mobile) and localStorage (web)",
+        "event_schema": "Identical event names and properties across platforms",
+        "attribution": "Track source (web vs mobile) + campaign parameters in deep links"
+      },
+      "estimated_effort": "4-6 hours"
+    }
+  },
+  "phase_2_implementation_plan": {
+    "1_shared_authentication": {
+      "approach": "Optional login (not required) with Firebase Auth or Supabase",
+      "benefits": [
+        "Sync watchlist across devices",
+        "Personalized notifications",
+        "Portfolio tracking",
+        "Premium features gate"
+      ],
+      "user_flow": [
+        "1. User opens app/web without login (works fully)",
+        "2. Prompted to create account when adding to watchlist: 'Sign in to sync across devices'",
+        "3. OAuth with Google/Apple (fastest)",
+        "4. All data syncs via cloud"
+      ],
+      "tech_stack": "Firebase Auth (mobile + web SDKs) or Supabase Auth",
+      "estimated_effort": "12-16 hours"
+    },
+    "2_watchlist_sync": {
+      "problem": "Users who favorite catalysts on mobile can't see them on web",
+      "solution": "Real-time sync via Firebase Firestore or Supabase Realtime",
+      "data_model": "users/{userId}/watchlist/{catalystId}",
+      "sync_strategy": [
+        "Optimistic updates (instant UI, background sync)",
+        "Conflict resolution (last-write-wins)",
+        "Offline queue (store changes locally, sync when online)"
+      ],
+      "estimated_effort": "8-10 hours"
+    },
+    "3_cross_platform_notifications": {
+      "problem": "Push notifications only work on mobile, web users miss alerts",
+      "solution": "Web push (PWA) + mobile push with unified delivery system",
+      "architecture": [
+        "Backend: Cloud Functions or Next.js API route",
+        "Mobile: Expo Notifications",
+        "Web: Firebase Cloud Messaging (FCM) for web push",
+        "Unified queue: Send to both platforms when catalyst alert triggers"
+      ],
+      "estimated_effort": "10-12 hours"
+    },
+    "4_universal_search": {
+      "feature": "Search bar that works identically on mobile and web with deep links",
+      "implementation": [
+        "Shared search index (Algolia or Meilisearch)",
+        "Type-ahead suggestions",
+        "Results link to catalyst details with deep linking support",
+        "Recent searches synced across devices"
+      ],
+      "estimated_effort": "8-12 hours"
+    }
+  },
+  "phase_3_implementation_plan": {
+    "1_realtime_data_sync": {
+      "goal": "Live updates when catalyst outcomes are announced",
+      "tech": "WebSocket (Socket.io) or Server-Sent Events (SSE)",
+      "features": [
+        "Live PDUFA result banner appears on both mobile and web simultaneously",
+        "Real-time price updates for tickers",
+        "Live notification when TIER_1 catalyst approaches"
+      ],
+      "estimated_effort": "16-20 hours"
+    },
+    "2_portfolio_sync": {
+      "goal": "Track trade history and P&L across platforms",
+      "features": [
+        "Manual trade logging (entry price, exit price, size)",
+        "Auto-import from brokerage API (TD Ameritrade, Schwab, IBKR)",
+        "P&L dashboard",
+        "Performance attribution by catalyst tier"
+      ],
+      "estimated_effort": "20-24 hours"
+    },
+    "3_web_pwa": {
+      "goal": "Website works offline + installs like native app",
+      "features": [
+        "Service worker for offline caching",
+        "Add to Home Screen prompt",
+        "App-like experience on mobile web",
+        "Background sync for watchlist changes"
+      ],
+      "estimated_effort": "12-16 hours"
+    },
+    "4_mobile_webview_premium": {
+      "goal": "Embed website features that are hard to build natively",
+      "use_cases": [
+        "Complex charting (TradingView)",
+        "Interactive tutorials",
+        "Blog/research content",
+        "Payment/subscription pages (easier to update via web)"
+      ],
+      "implementation": "React Native WebView with postMessage bridge for native ↔ web communication",
+      "estimated_effort": "8-10 hours"
+    }
+  },
+  "recommended_priority_order": [
+    {
+      "rank": 1,
+      "feature": "Unified Data API (Static JSON)",
+      "reason": "Prevents data drift, easiest to implement",
+      "effort": "2-4 hours",
+      "impact": "HIGH"
+    },
+    {
+      "rank": 2,
+      "feature": "Mobile Download Prompts on Website",
+      "reason": "Drives app installs, quick win",
+      "effort": "2-3 hours",
+      "impact": "HIGH"
+    },
+    {
+      "rank": 3,
+      "feature": "Deep Linking (Mobile ↔ Web)",
+      "reason": "Seamless navigation, major UX improvement",
+      "effort": "6-8 hours",
+      "impact": "HIGH"
+    },
+    {
+      "rank": 4,
+      "feature": "Shared Analytics",
+      "reason": "Understand user behavior, inform product decisions",
+      "effort": "4-6 hours",
+      "impact": "MEDIUM"
+    },
+    {
+      "rank": 5,
+      "feature": "Watchlist Sync",
+      "reason": "Users expect this, retention booster",
+      "effort": "8-10 hours (requires auth)",
+      "impact": "HIGH"
+    },
+    {
+      "rank": 6,
+      "feature": "Cross-Platform Notifications",
+      "reason": "Re-engagement, competitive advantage",
+      "effort": "10-12 hours",
+      "impact": "HIGH"
+    },
+    {
+      "rank": 7,
+      "feature": "Shared Authentication",
+      "reason": "Foundation for all sync features",
+      "effort": "12-16 hours",
+      "impact": "MEDIUM (enables other features)"
+    },
+    {
+      "rank": 8,
+      "feature": "Universal Search",
+      "reason": "Power user feature, nice-to-have",
+      "effort": "8-12 hours",
+      "impact": "MEDIUM"
+    },
+    {
+      "rank": 9,
+      "feature": "Real-time Data Sync",
+      "reason": "Premium feature for serious traders",
+      "effort": "16-20 hours",
+      "impact": "MEDIUM"
+    },
+    {
+      "rank": 10,
+      "feature": "Web PWA",
+      "reason": "Reduces need for native app",
+      "effort": "12-16 hours",
+      "impact": "LOW (nice-to-have)"
+    }
+  ],
+  "quick_start_checklist": {
+    "today": [
+      "☐ Export CATALYSTS_DATA to catalysts-v10-69.json",
+      "☐ Host JSON at pdufa.bio/api/catalysts-v10-69.json",
+      "☐ Update mobile app to fetch from API on launch",
+      "☐ Add fallback to bundled data if API fails"
+    ],
+    "this_week": [
+      "☐ Add 'Download ODIN App' banners to website",
+      "☐ Implement deep linking in mobile app (app.json + Linking handler)",
+      "☐ Add .well-known files for Universal Links / App Links",
+      "☐ Add 'View on Web' buttons in mobile app for catalyst details"
+    ],
+    "next_week": [
+      "☐ Set up Firebase or Supabase project",
+      "☐ Implement optional authentication (Google/Apple OAuth)",
+      "☐ Add watchlist sync with Firestore/Supabase",
+      "☐ Set up shared analytics (GA4 or Mixpanel)"
+    ],
+    "month_1": [
+      "☐ Implement cross-platform push notifications",
+      "☐ Add universal search",
+      "☐ Build portfolio tracking MVP",
+      "☐ Test end-to-end user flows (web → mobile → web)"
+    ]
+  },
+  "ux_principles": [
+    "1. Never force users to choose platform - both should work standalone",
+    "2. Make platform switching feel like magic (deep links, instant sync)",
+    "3. Mobile app = speed + notifications + offline, Web = depth + discoverability",
+    "4. Share designs, not just data (consistent UI/UX across platforms)",
+    "5. Progressive enhancement - start with core features, add sync/auth later"
+  ],
+  "technical_architecture": {
+    "data_flow": "ODIN Engine (Python) → Static JSON / API → Mobile + Web fetch → Local cache → UI",
+    "authentication": "Optional Firebase Auth → User ID → Firestore/Supabase → Sync watchlist/portfolio",
+    "notifications": "Catalyst Alert Service → Cloud Function → FCM (web) + Expo Push (mobile)",
+    "analytics": "User Action → GA4 / Mixpanel SDK → Cross-platform attribution",
+    "deep_linking": "pdufa.bio/catalyst/:id → iOS Universal Link / Android App Link → Mobile app navigation"
+  },
+  "success_metrics": {
+    "phase_1": [
+      "% users who click 'Open in App' on website",
+      "App installs from website referrals",
+      "Deep link success rate (% links that open app vs web)",
+      "Data sync reliability (API uptime, cache hit rate)"
+    ],
+    "phase_2": [
+      "% users who create accounts",
+      "Watchlist items synced across platforms",
+      "Cross-platform session rate (same user uses both)",
+      "Notification CTR (mobile vs web push)"
+    ],
+    "phase_3": [
+      "Real-time update latency (seconds)",
+      "Portfolio sync adoption rate",
+      "PWA install rate",
+      "Retention uplift from cross-platform users"
+    ]
+  },
+  "conclusion": {
+    "summary": "The mobile app and website are currently isolated. By implementing unified data, deep linking, and optional sync, you create a seamless experience where users naturally flow between platforms based on context.",
+    "philosophy": "Mobile = glanceable speed + push notifications. Web = deep research + discoverability. Together = unbeatable.",
+    "next_steps": [
+      "1. Start with Phase 1 Quick Wins (unified data API + deep linking)",
+      "2. Measure adoption and user feedback",
+      "3. Iterate toward Phase 2 (auth + sync) based on demand",
+      "4. Ship Phase 3 (real-time + portfolio) for power users"
+    ],
+    "estimated_total_effort": "Phase 1: 14-21 hours | Phase 2: 38-50 hours | Phase 3: 56-70 hours",
+    "recommended_sprint": "Focus on Phase 1 this week (unified data + deep links), then assess user demand for sync features"
+  }
+}
