@@ -12,13 +12,17 @@ import { PaperTradeButton } from '../../components/Trading/PaperTradeButton';
 import { useMarketDataStore } from '../../stores/marketDataStore';
 import { ViewOnWebButton } from '../../components/ViewOnWebButton';
 import { trackEvent } from '../../services/analyticsService';
+import { SponsorTrackRecord } from '../../components/SponsorTrackRecord';
+import { SimilarCatalysts } from '../../components/SimilarCatalysts';
+import { scheduleCatalystNotifications, cancelCatalystNotifications } from '../../services/catalystNotificationService';
 
 interface Props {
   catalyst: Catalyst;
   onClose: () => void;
+  onSelectCatalyst?: (catalyst: Catalyst) => void;
 }
 
-export function CatalystDetail({ catalyst, onClose }: Props) {
+export function CatalystDetail({ catalyst, onClose, onSelectCatalyst }: Props) {
   const { isWatched, toggle } = useWatchlistStore();
   const { predictions, sentiment, submitVote, hasPredicted, reviewCatalyst } = usePredictionStore();
   const watched = isWatched(catalyst.id);
@@ -177,6 +181,16 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
             </View>
           )}
 
+          {/* Sponsor Track Record (P2-003) */}
+          {catalyst.type === 'PDUFA' && (
+            <SponsorTrackRecord company={catalyst.company} currentCatalystId={catalyst.id} />
+          )}
+
+          {/* Similar Catalysts (P2-003) */}
+          {catalyst.type === 'PDUFA' && (
+            <SimilarCatalysts catalyst={catalyst} onSelectCatalyst={onSelectCatalyst} />
+          )}
+
           {/* View on Web */}
           <View style={styles.section}>
             <ViewOnWebButton catalystId={catalyst.id} ticker={catalyst.ticker} />
@@ -191,6 +205,12 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
                 ticker: catalyst.ticker,
                 tier: catalyst.tier,
               });
+              // P2-005: Schedule or cancel push notifications
+              if (watched) {
+                cancelCatalystNotifications(catalyst.id).catch(() => {});
+              } else {
+                scheduleCatalystNotifications(catalyst).catch(() => {});
+              }
             }}>
               <Text style={styles.actionBtnText}>{watched ? '★ Watching' : '☆ Watch'}</Text>
             </TouchableOpacity>
