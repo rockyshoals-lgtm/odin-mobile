@@ -10,6 +10,8 @@ import { LivePriceBadge } from '../../components/Trading/LivePriceBadge';
 import { IntervalReturnsCard } from '../../components/Trading/IntervalReturnsCard';
 import { PaperTradeButton } from '../../components/Trading/PaperTradeButton';
 import { useMarketDataStore } from '../../stores/marketDataStore';
+import { ViewOnWebButton } from '../../components/ViewOnWebButton';
+import { trackEvent } from '../../services/analyticsService';
 
 interface Props {
   catalyst: Catalyst;
@@ -29,6 +31,11 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
   // Track this as a "reviewed" catalyst for Daily Edge Quest
   React.useEffect(() => {
     reviewCatalyst(catalyst.id);
+    trackEvent('catalyst_viewed', {
+      catalystId: catalyst.id,
+      ticker: catalyst.ticker,
+      tier: catalyst.tier,
+    });
   }, [catalyst.id]);
 
   const handleVote = (prediction: 'APPROVE' | 'CRL') => {
@@ -170,9 +177,21 @@ export function CatalystDetail({ catalyst, onClose }: Props) {
             </View>
           )}
 
+          {/* View on Web */}
+          <View style={styles.section}>
+            <ViewOnWebButton catalystId={catalyst.id} ticker={catalyst.ticker} />
+          </View>
+
           {/* Actions */}
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.actionBtn, watched && styles.actionBtnActive]} onPress={() => toggle(catalyst.id)}>
+            <TouchableOpacity style={[styles.actionBtn, watched && styles.actionBtnActive]} onPress={() => {
+              toggle(catalyst.id);
+              trackEvent(watched ? 'catalyst_removed_from_watchlist' : 'catalyst_added_to_watchlist', {
+                catalystId: catalyst.id,
+                ticker: catalyst.ticker,
+                tier: catalyst.tier,
+              });
+            }}>
               <Text style={styles.actionBtnText}>{watched ? '★ Watching' : '☆ Watch'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn}>
