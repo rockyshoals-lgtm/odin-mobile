@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator, Linking } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,6 +12,9 @@ import { OptionsTutorial } from './screens/Onboarding/OptionsTutorial';
 import { useCatalystStore } from './stores/catalystStore';
 import { CATALYSTS_DATA } from './constants/catalysts';
 import { notificationService } from './services/notificationService';
+import { fetchCatalysts, FetchResult } from './services/catalystApiService';
+import { initAnalytics, trackEvent } from './services/analyticsService';
+import { useDeepLinking, DeepLinkTarget } from './hooks/useDeepLinking';
 
 const WELCOME_SEEN_KEY = 'odin-welcome-seen-v1.2';
 const QUIZ_DONE_KEY = 'odin-quiz-done-v1.2';
@@ -130,19 +133,57 @@ function SplashScreen() {
 export default function App() {
   const [step, setStep] = useState<OnboardingStep>('loading');
   const [quizLevel, setQuizLevel] = useState<ExperienceLevel>('BEGINNER');
+  const [dataSource, setDataSource] = useState<'api' | 'cache' | 'bundled'>('bundled');
+  const [pendingDeepLink, setPendingDeepLink] = useState<DeepLinkTarget | null>(null);
   const { setCatalysts } = useCatalystStore();
+
+  // ─── Deep Linking Handler ────────────
+  const handleDeepLink = useCallback((target: DeepLinkTarget) => {
+    if (step === 'app') {
+      // App is ready — handle immediately
+      // Navigation will be handled by BottomTabNavigator via context or event
+      console.log('[App] Deep link target:', target);
+      // For now, store as pending — future: use navigation ref
+      setPendingDeepLink(target);
+    } else {
+      // App still loading — queue for later
+      setPendingDeepLink(target);
+    }
+  }, [step]);
+
+  useDeepLinking(handleDeepLink);
 
   useEffect(() => {
     const init = async () => {
-      // Load catalyst data
-      setCatalysts(CATALYSTS_DATA);
+      // ── Initialize analytics ─────────────────────────────
+      await initAnalytics().catch(() => console.warn('[App] Analytics init skipped'));
+      trackEvent('app_launched', { dataSource: 'initializing' });
 
-      // Initialize push notifications (non-blocking — degrades in Expo Go)
+      // ── Fetch catalyst data from API (with fallback) ─────
+      const startTime = Date.now();
+      let result: FetchResult;
+      try {
+        result = await fetchCatalysts();
+        setCatalysts(result.catalysts);
+        setDataSource(result.source);
+        trackEvent('api_fetch_completed', {
+          dataSource: result.source,
+          duration: Date.now() - startTime,
+        });
+        console.log(`[App] Loaded ${result.catalysts.length} catalysts from ${result.source}`);
+      } catch {
+        // Ultimate fallback — should never reach here (fetchCatalysts has its own fallback)
+        setCatalysts(CATALYSTS_DATA);
+        setDataSource('bundled');
+        console.warn('[App] Using hardcoded fallback');
+      }
+
+      // ── Initialize push notifications (non-blocking) ────
       notificationService.initialize()
         .then(() => notificationService.scheduleDailySummary())
         .catch(() => console.warn('[App] Notification init skipped'));
 
-      // Check if user has completed onboarding
+      // ── Check onboarding status ──────────────────────────
       const confidentialAccepted = await AsyncStorage.getItem(CONFIDENTIAL_ACCEPTED_KEY);
       const disclaimerAccepted = await AsyncStorage.getItem(DISCLAIMER_ACCEPTED_KEY);
       const quizDone = await AsyncStorage.getItem(QUIZ_DONE_KEY);
