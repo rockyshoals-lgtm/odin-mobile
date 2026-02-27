@@ -14,6 +14,7 @@ import { ViewOnWebButton } from '../../components/ViewOnWebButton';
 import { trackEvent } from '../../services/analyticsService';
 import { SponsorTrackRecord } from '../../components/SponsorTrackRecord';
 import { SimilarCatalysts } from '../../components/SimilarCatalysts';
+import { OptionsFlowCard } from '../../components/Trading/OptionsFlowCard';
 import { scheduleCatalystNotifications, cancelCatalystNotifications } from '../../services/catalystNotificationService';
 
 interface Props {
@@ -130,6 +131,11 @@ export function CatalystDetail({ catalyst, onClose, onSelectCatalyst }: Props) {
                 </View>
               ))}
             </View>
+          )}
+
+          {/* Options & Flow (UOA-MOBILE-UI-001) */}
+          {catalyst.type === 'PDUFA' && (
+            <OptionsFlowCard ticker={catalyst.ticker} catalystId={catalyst.id} />
           )}
 
           {/* Community Voting */}
